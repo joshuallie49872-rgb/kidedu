@@ -3,115 +3,155 @@
 <head>
 <meta charset="UTF-8" />
 <title>KidEdu – Approved Only</title>
-
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <style>
-  body {
-    margin: 0;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    background: #0b1220;
-    color: #e6e9ef;
-  }
-
-  header {
-    padding: 12px;
-    background: #111a2e;
-    font-size: 18px;
-    font-weight: 600;
-  }
-
-  #container {
-    display: grid;
-    grid-template-columns: 1fr 3fr;
-    height: calc(100vh - 48px);
-  }
-
-  #list {
-    overflow-y: auto;
-    border-right: 1px solid #1f2a44;
-  }
-
-  .item {
-    padding: 10px;
-    cursor: pointer;
-    border-bottom: 1px solid #1f2a44;
-  }
-
-  .item:hover {
-    background: #1a2440;
-  }
-
-  iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-    background: black;
-  }
-
-  .hint {
-    padding: 20px;
-    color: #9aa4bf;
-  }
+  body { margin:0; font-family: system-ui,-apple-system,BlinkMacSystemFont,sans-serif; background:#0b1220; color:#e6e9ef; }
+  header { padding:12px; background:#111a2e; font-size:18px; font-weight:600; }
+  #container { display:grid; grid-template-columns: 1fr 3fr; height: calc(100vh - 48px); }
+  #list { overflow-y:auto; border-right:1px solid #1f2a44; }
+  .item { padding:10px; cursor:pointer; border-bottom:1px solid #1f2a44; }
+  .item:hover { background:#1a2440; }
+  #player { background:#000; }
+  iframe { width:100%; height:100%; border:none; background:black; }
+  .hint { padding:20px; color:#9aa4bf; }
+  .err { padding:20px; color:#ffb4b4; white-space:pre-wrap; }
+  .topbar { display:flex; gap:10px; align-items:center; padding:10px 12px; border-bottom:1px solid #1f2a44; background:#0f172a; }
+  button { background:#1f2a44; color:#e6e9ef; border:1px solid #2f3b5f; padding:8px 10px; border-radius:8px; font-weight:600; }
+  button:active { transform: translateY(1px); }
+  .meta { color:#9aa4bf; font-size:13px; }
 </style>
 </head>
 
 <body>
-
 <header>KidEdu – Approved Only (no search, no suggestions)</header>
 
+<div class="topbar">
+  <button id="newMixBtn">New mix</button>
+  <div class="meta" id="meta">Loading…</div>
+</div>
+
 <div id="container">
-  <div id="list"></div>
-  <div id="player">
-    <div class="hint">Pick a video</div>
-  </div>
+  <div id="list"><div class="hint">Loading catalog…</div></div>
+  <div id="player"><div class="hint">Pick a video</div></div>
 </div>
 
 <script>
+/* ===== CONFIG ===== */
 const MAX_VISIBLE = 100;
-const CATALOG_URL = "catalog.json";
 
-function shuffle(array) {
-  for (let i = array.length - 1; i > 0; i--) {
+/* cache-buster so iPad/Safari doesn’t reuse old JSON */
+function cacheBustUrl(path) {
+  const seed = Date.now() + Math.random();
+  return path + "?ts=" + encodeURIComponent(seed);
+}
+
+/* fast Fisher-Yates shuffle */
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
+    [arr[i], arr[j]] = [arr[j], arr[i]];
   }
 }
 
-fetch(CATALOG_URL)
-  .then(r => r.json())
-  .then(allVideos => {
-    shuffle(allVideos);
+/* flatten channel-based catalog.json into one array of video_ids */
+function flattenCatalog(catalogObj) {
+  const out = [];
+  const channels = catalogObj && catalogObj.channels ? catalogObj.channels : null;
+  if (!channels || typeof channels !== "object") return out;
 
-    const visible = allVideos.slice(0, MAX_VISIBLE);
-    const list = document.getElementById("list");
-    const player = document.getElementById("player");
+  for (const cid of Object.keys(channels)) {
+    const vids = channels[cid];
+    if (Array.isArray(vids)) {
+      for (const v of vids) {
+        if (typeof v === "string" && v.length === 11) out.push(v);
+      }
+    }
+  }
 
-    visible.forEach(v => {
-      const div = document.createElement("div");
-      div.className = "item";
-      div.textContent = v.title || v.video_id;
+  // de-dupe while preserving order
+  const seen = new Set();
+  const uniq = [];
+  for (const v of out) {
+    if (!seen.has(v)) { seen.add(v); uniq.push(v); }
+  }
+  return uniq;
+}
 
-      div.onclick = () => {
-        player.innerHTML = `
-          <iframe
-            src="https://www.youtube.com/embed/${v.video_id}?rel=0&modestbranding=1&controls=1"
-            allowfullscreen>
-          </iframe>
-        `;
-      };
+let ALL_VIDEO_IDS = [];
 
-      list.appendChild(div);
-    });
+function renderMix() {
+  const list = document.getElementById("list");
+  const player = document.getElementById("player");
+  list.innerHTML = "";
+  player.innerHTML = "<div class='hint'>Pick a video</div>";
 
-    console.log("Total catalog:", allVideos.length);
-    console.log("Visible this load:", visible.length);
-  })
-  .catch(err => {
-    document.getElementById("list").innerHTML =
-      "<div class='hint'>Failed to load catalog</div>";
-    console.error(err);
-  });
+  const ids = ALL_VIDEO_IDS.slice();
+  shuffle(ids);
+  const visible = ids.slice(0, MAX_VISIBLE);
+
+  for (const vid of visible) {
+    const div = document.createElement("div");
+    div.className = "item";
+    div.textContent = vid; // lightweight: show ID only (fast). Later we can add titles if you want.
+
+    div.onclick = () => {
+      player.innerHTML = `
+        <iframe
+          src="https://www.youtube.com/embed/${vid}?rel=0&modestbranding=1&controls=1"
+          allow="autoplay; encrypted-media"
+          allowfullscreen>
+        </iframe>`;
+    };
+
+    list.appendChild(div);
+  }
+
+  document.getElementById("meta").textContent =
+    `Catalog: ${ALL_VIDEO_IDS.length.toLocaleString()} videos · Showing: ${visible.length} (random each load)`;
+}
+
+async function loadCatalog() {
+  const list = document.getElementById("list");
+  const meta = document.getElementById("meta");
+
+  try {
+    meta.textContent = "Loading catalog.json…";
+    const res = await fetch(cacheBustUrl("./catalog.json"), { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status + " " + res.statusText);
+
+    const data = await res.json();
+
+    // Accept either:
+    // A) channel-catalog object: { channels: { UC..: [vid,vid] } }
+    // B) simple array: ["vid","vid",...] (we support this too)
+    let ids = [];
+
+    if (Array.isArray(data)) {
+      ids = data.filter(v => typeof v === "string" && v.length === 11);
+    } else {
+      ids = flattenCatalog(data);
+    }
+
+    if (!ids.length) {
+      throw new Error("Loaded catalog.json but found 0 video IDs.\n\nMake sure catalog.json contains either:\n- an array of 11-char video IDs\nOR\n- an object with channels: { UC...: [videoIds...] }");
+    }
+
+    ALL_VIDEO_IDS = ids;
+    renderMix();
+
+  } catch (e) {
+    list.innerHTML = "<div class='err'>Failed to load catalog\n\n" + String(e) + "</div>";
+    meta.textContent = "Catalog load failed";
+    console.error(e);
+  }
+}
+
+document.getElementById("newMixBtn").onclick = () => {
+  if (ALL_VIDEO_IDS.length) renderMix();
+};
+
+loadCatalog();
 </script>
 
 </body>
