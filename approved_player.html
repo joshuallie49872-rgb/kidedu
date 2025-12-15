@@ -1,1443 +1,167 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>KidEdu - Approved Only</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>KidEdu – Approved Only</title>
+
 <style>
-body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; background:#0b0f14; color:#e7eef7; }
-header { padding:12px 14px; font-weight:700; background:#0f1620; position:sticky; top:0; z-index:5; }
-.wrap { display:grid; grid-template-columns: 360px 1fr; gap:12px; padding:12px; }
-.list { display:flex; flex-direction:column; gap:10px; max-height: calc(100vh - 70px); overflow:auto; }
-.item { display:flex; gap:10px; align-items:center; padding:10px; border:1px solid #1c2a3a; background:#0f1620; border-radius:14px; cursor:pointer; text-align:left; color:#e7eef7; }
-.item:hover { border-color:#2b3f57; }
-.item img { width:120px; height:68px; border-radius:10px; object-fit:cover; flex:0 0 auto; }
-.t { font-size:14px; line-height:1.2; }
-.player { border:1px solid #1c2a3a; background:#0f1620; border-radius:14px; padding:10px; }
-.now { font-weight:700; margin:6px 0 10px; }
-iframe { width:100%; aspect-ratio:16/9; border:0; border-radius:12px; background:black; }
-.small { opacity:.75; font-size:12px; margin-top:10px; }
-@media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } .list { max-height:none; } }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #0f172a;
+    color: #e5e7eb;
+  }
+
+  header {
+    padding: 12px;
+    text-align: center;
+    background: #020617;
+    font-weight: 600;
+  }
+
+  #grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .card {
+    background: #020617;
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 1px solid #1e293b;
+  }
+
+  .card img {
+    width: 100%;
+    display: block;
+  }
+
+  .card div {
+    padding: 8px;
+    font-size: 13px;
+    line-height: 1.3;
+  }
+
+  #player {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    display: none;
+    z-index: 999;
+  }
+
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  #closeBtn {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    z-index: 1000;
+    background: #111827;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+  }
 </style>
 </head>
+
 <body>
-<header>KidEdu — Approved Only <span class="small">(no search / no suggestions feed)</span></header>
-<div class="wrap">
-  <div class="list">
-    
-        <button class="item" onclick="play('KkNKXGW1eAE', `KkNKXGW1eAE`)">
-          <img src="https://i.ytimg.com/vi/KkNKXGW1eAE/hqdefault.jpg" alt="">
-          <div class="t">KkNKXGW1eAE</div>
-        </button>
-        
-        <button class="item" onclick="play('vizcybwj_j0', `vizcybwj_j0`)">
-          <img src="https://i.ytimg.com/vi/vizcybwj_j0/hqdefault.jpg" alt="">
-          <div class="t">vizcybwj_j0</div>
-        </button>
-        
-        <button class="item" onclick="play('WuJ9dNFxj0Q', `WuJ9dNFxj0Q`)">
-          <img src="https://i.ytimg.com/vi/WuJ9dNFxj0Q/hqdefault.jpg" alt="">
-          <div class="t">WuJ9dNFxj0Q</div>
-        </button>
-        
-        <button class="item" onclick="play('J26Jne4Y8B4', `J26Jne4Y8B4`)">
-          <img src="https://i.ytimg.com/vi/J26Jne4Y8B4/hqdefault.jpg" alt="">
-          <div class="t">J26Jne4Y8B4</div>
-        </button>
-        
-        <button class="item" onclick="play('Cav1UrbbZBY', `Cav1UrbbZBY`)">
-          <img src="https://i.ytimg.com/vi/Cav1UrbbZBY/hqdefault.jpg" alt="">
-          <div class="t">Cav1UrbbZBY</div>
-        </button>
-        
-        <button class="item" onclick="play('EMjNZ8U6gL0', `EMjNZ8U6gL0`)">
-          <img src="https://i.ytimg.com/vi/EMjNZ8U6gL0/hqdefault.jpg" alt="">
-          <div class="t">EMjNZ8U6gL0</div>
-        </button>
-        
-        <button class="item" onclick="play('r7gAE4n-nLs', `r7gAE4n-nLs`)">
-          <img src="https://i.ytimg.com/vi/r7gAE4n-nLs/hqdefault.jpg" alt="">
-          <div class="t">r7gAE4n-nLs</div>
-        </button>
-        
-        <button class="item" onclick="play('0qXQC9UHTGo', `0qXQC9UHTGo`)">
-          <img src="https://i.ytimg.com/vi/0qXQC9UHTGo/hqdefault.jpg" alt="">
-          <div class="t">0qXQC9UHTGo</div>
-        </button>
-        
-        <button class="item" onclick="play('8XA3X-uqWCs', `8XA3X-uqWCs`)">
-          <img src="https://i.ytimg.com/vi/8XA3X-uqWCs/hqdefault.jpg" alt="">
-          <div class="t">8XA3X-uqWCs</div>
-        </button>
-        
-        <button class="item" onclick="play('LmSUCB14LQE', `LmSUCB14LQE`)">
-          <img src="https://i.ytimg.com/vi/LmSUCB14LQE/hqdefault.jpg" alt="">
-          <div class="t">LmSUCB14LQE</div>
-        </button>
-        
-        <button class="item" onclick="play('cIt8eHmTtjI', `cIt8eHmTtjI`)">
-          <img src="https://i.ytimg.com/vi/cIt8eHmTtjI/hqdefault.jpg" alt="">
-          <div class="t">cIt8eHmTtjI</div>
-        </button>
-        
-        <button class="item" onclick="play('3o9sMorG0Pk', `3o9sMorG0Pk`)">
-          <img src="https://i.ytimg.com/vi/3o9sMorG0Pk/hqdefault.jpg" alt="">
-          <div class="t">3o9sMorG0Pk</div>
-        </button>
-        
-        <button class="item" onclick="play('_3p9tRnJpSI', `_3p9tRnJpSI`)">
-          <img src="https://i.ytimg.com/vi/_3p9tRnJpSI/hqdefault.jpg" alt="">
-          <div class="t">_3p9tRnJpSI</div>
-        </button>
-        
-        <button class="item" onclick="play('3KeBBvBHkUY', `3KeBBvBHkUY`)">
-          <img src="https://i.ytimg.com/vi/3KeBBvBHkUY/hqdefault.jpg" alt="">
-          <div class="t">3KeBBvBHkUY</div>
-        </button>
-        
-        <button class="item" onclick="play('gUoE7U2IEys', `gUoE7U2IEys`)">
-          <img src="https://i.ytimg.com/vi/gUoE7U2IEys/hqdefault.jpg" alt="">
-          <div class="t">gUoE7U2IEys</div>
-        </button>
-        
-        <button class="item" onclick="play('tbI0ZUJMnik', `tbI0ZUJMnik`)">
-          <img src="https://i.ytimg.com/vi/tbI0ZUJMnik/hqdefault.jpg" alt="">
-          <div class="t">tbI0ZUJMnik</div>
-        </button>
-        
-        <button class="item" onclick="play('h5JcC4i1OoQ', `h5JcC4i1OoQ`)">
-          <img src="https://i.ytimg.com/vi/h5JcC4i1OoQ/hqdefault.jpg" alt="">
-          <div class="t">h5JcC4i1OoQ</div>
-        </button>
-        
-        <button class="item" onclick="play('mEG-xJQE2pM', `mEG-xJQE2pM`)">
-          <img src="https://i.ytimg.com/vi/mEG-xJQE2pM/hqdefault.jpg" alt="">
-          <div class="t">mEG-xJQE2pM</div>
-        </button>
-        
-        <button class="item" onclick="play('U7gZAzcPboc', `U7gZAzcPboc`)">
-          <img src="https://i.ytimg.com/vi/U7gZAzcPboc/hqdefault.jpg" alt="">
-          <div class="t">U7gZAzcPboc</div>
-        </button>
-        
-        <button class="item" onclick="play('FCxCkXI4fc8', `FCxCkXI4fc8`)">
-          <img src="https://i.ytimg.com/vi/FCxCkXI4fc8/hqdefault.jpg" alt="">
-          <div class="t">FCxCkXI4fc8</div>
-        </button>
-        
-        <button class="item" onclick="play('41kcmMJQ2ds', `41kcmMJQ2ds`)">
-          <img src="https://i.ytimg.com/vi/41kcmMJQ2ds/hqdefault.jpg" alt="">
-          <div class="t">41kcmMJQ2ds</div>
-        </button>
-        
-        <button class="item" onclick="play('o2fgyd23wCE', `o2fgyd23wCE`)">
-          <img src="https://i.ytimg.com/vi/o2fgyd23wCE/hqdefault.jpg" alt="">
-          <div class="t">o2fgyd23wCE</div>
-        </button>
-        
-        <button class="item" onclick="play('Zku64DrTbB8', `Zku64DrTbB8`)">
-          <img src="https://i.ytimg.com/vi/Zku64DrTbB8/hqdefault.jpg" alt="">
-          <div class="t">Zku64DrTbB8</div>
-        </button>
-        
-        <button class="item" onclick="play('EyLJ4158Y3s', `EyLJ4158Y3s`)">
-          <img src="https://i.ytimg.com/vi/EyLJ4158Y3s/hqdefault.jpg" alt="">
-          <div class="t">EyLJ4158Y3s</div>
-        </button>
-        
-        <button class="item" onclick="play('m7EMFdoBQqY', `m7EMFdoBQqY`)">
-          <img src="https://i.ytimg.com/vi/m7EMFdoBQqY/hqdefault.jpg" alt="">
-          <div class="t">m7EMFdoBQqY</div>
-        </button>
-        
-        <button class="item" onclick="play('u8rWjkdUIAU', `u8rWjkdUIAU`)">
-          <img src="https://i.ytimg.com/vi/u8rWjkdUIAU/hqdefault.jpg" alt="">
-          <div class="t">u8rWjkdUIAU</div>
-        </button>
-        
-        <button class="item" onclick="play('YXo0ih20eZI', `YXo0ih20eZI`)">
-          <img src="https://i.ytimg.com/vi/YXo0ih20eZI/hqdefault.jpg" alt="">
-          <div class="t">YXo0ih20eZI</div>
-        </button>
-        
-        <button class="item" onclick="play('NpqU3eSeS1c', `NpqU3eSeS1c`)">
-          <img src="https://i.ytimg.com/vi/NpqU3eSeS1c/hqdefault.jpg" alt="">
-          <div class="t">NpqU3eSeS1c</div>
-        </button>
-        
-        <button class="item" onclick="play('iOXMx9xvmoI', `iOXMx9xvmoI`)">
-          <img src="https://i.ytimg.com/vi/iOXMx9xvmoI/hqdefault.jpg" alt="">
-          <div class="t">iOXMx9xvmoI</div>
-        </button>
-        
-        <button class="item" onclick="play('3Izqqygeaxg', `3Izqqygeaxg`)">
-          <img src="https://i.ytimg.com/vi/3Izqqygeaxg/hqdefault.jpg" alt="">
-          <div class="t">3Izqqygeaxg</div>
-        </button>
-        
-        <button class="item" onclick="play('PV5ChwOUFAI', `PV5ChwOUFAI`)">
-          <img src="https://i.ytimg.com/vi/PV5ChwOUFAI/hqdefault.jpg" alt="">
-          <div class="t">PV5ChwOUFAI</div>
-        </button>
-        
-        <button class="item" onclick="play('Kl_FAL9i6EA', `Kl_FAL9i6EA`)">
-          <img src="https://i.ytimg.com/vi/Kl_FAL9i6EA/hqdefault.jpg" alt="">
-          <div class="t">Kl_FAL9i6EA</div>
-        </button>
-        
-        <button class="item" onclick="play('Rj4FiwB1FWE', `Rj4FiwB1FWE`)">
-          <img src="https://i.ytimg.com/vi/Rj4FiwB1FWE/hqdefault.jpg" alt="">
-          <div class="t">Rj4FiwB1FWE</div>
-        </button>
-        
-        <button class="item" onclick="play('zLRFyyc8jRI', `zLRFyyc8jRI`)">
-          <img src="https://i.ytimg.com/vi/zLRFyyc8jRI/hqdefault.jpg" alt="">
-          <div class="t">zLRFyyc8jRI</div>
-        </button>
-        
-        <button class="item" onclick="play('6V4Fc7fIcYQ', `6V4Fc7fIcYQ`)">
-          <img src="https://i.ytimg.com/vi/6V4Fc7fIcYQ/hqdefault.jpg" alt="">
-          <div class="t">6V4Fc7fIcYQ</div>
-        </button>
-        
-        <button class="item" onclick="play('DawiWvnZK_g', `DawiWvnZK_g`)">
-          <img src="https://i.ytimg.com/vi/DawiWvnZK_g/hqdefault.jpg" alt="">
-          <div class="t">DawiWvnZK_g</div>
-        </button>
-        
-        <button class="item" onclick="play('NA0HoaBnN4U', `NA0HoaBnN4U`)">
-          <img src="https://i.ytimg.com/vi/NA0HoaBnN4U/hqdefault.jpg" alt="">
-          <div class="t">NA0HoaBnN4U</div>
-        </button>
-        
-        <button class="item" onclick="play('_pVMRhmQ0z8', `_pVMRhmQ0z8`)">
-          <img src="https://i.ytimg.com/vi/_pVMRhmQ0z8/hqdefault.jpg" alt="">
-          <div class="t">_pVMRhmQ0z8</div>
-        </button>
-        
-        <button class="item" onclick="play('bmzSyIy7pTk', `bmzSyIy7pTk`)">
-          <img src="https://i.ytimg.com/vi/bmzSyIy7pTk/hqdefault.jpg" alt="">
-          <div class="t">bmzSyIy7pTk</div>
-        </button>
-        
-        <button class="item" onclick="play('qxulvDDCwKk', `qxulvDDCwKk`)">
-          <img src="https://i.ytimg.com/vi/qxulvDDCwKk/hqdefault.jpg" alt="">
-          <div class="t">qxulvDDCwKk</div>
-        </button>
-        
-        <button class="item" onclick="play('5E954ZwZmoQ', `5E954ZwZmoQ`)">
-          <img src="https://i.ytimg.com/vi/5E954ZwZmoQ/hqdefault.jpg" alt="">
-          <div class="t">5E954ZwZmoQ</div>
-        </button>
-        
-        <button class="item" onclick="play('6MWWhj8LTgg', `6MWWhj8LTgg`)">
-          <img src="https://i.ytimg.com/vi/6MWWhj8LTgg/hqdefault.jpg" alt="">
-          <div class="t">6MWWhj8LTgg</div>
-        </button>
-        
-        <button class="item" onclick="play('OydYbfa9wF8', `OydYbfa9wF8`)">
-          <img src="https://i.ytimg.com/vi/OydYbfa9wF8/hqdefault.jpg" alt="">
-          <div class="t">OydYbfa9wF8</div>
-        </button>
-        
-        <button class="item" onclick="play('wImEvlEqgp0', `wImEvlEqgp0`)">
-          <img src="https://i.ytimg.com/vi/wImEvlEqgp0/hqdefault.jpg" alt="">
-          <div class="t">wImEvlEqgp0</div>
-        </button>
-        
-        <button class="item" onclick="play('TuT7ySA5kFI', `TuT7ySA5kFI`)">
-          <img src="https://i.ytimg.com/vi/TuT7ySA5kFI/hqdefault.jpg" alt="">
-          <div class="t">TuT7ySA5kFI</div>
-        </button>
-        
-        <button class="item" onclick="play('L0CPeWPtq9A', `L0CPeWPtq9A`)">
-          <img src="https://i.ytimg.com/vi/L0CPeWPtq9A/hqdefault.jpg" alt="">
-          <div class="t">L0CPeWPtq9A</div>
-        </button>
-        
-        <button class="item" onclick="play('pUSI2Pttx8k', `pUSI2Pttx8k`)">
-          <img src="https://i.ytimg.com/vi/pUSI2Pttx8k/hqdefault.jpg" alt="">
-          <div class="t">pUSI2Pttx8k</div>
-        </button>
-        
-        <button class="item" onclick="play('uL_NeiIEf7k', `uL_NeiIEf7k`)">
-          <img src="https://i.ytimg.com/vi/uL_NeiIEf7k/hqdefault.jpg" alt="">
-          <div class="t">uL_NeiIEf7k</div>
-        </button>
-        
-        <button class="item" onclick="play('p1lnsXA7uyE', `p1lnsXA7uyE`)">
-          <img src="https://i.ytimg.com/vi/p1lnsXA7uyE/hqdefault.jpg" alt="">
-          <div class="t">p1lnsXA7uyE</div>
-        </button>
-        
-        <button class="item" onclick="play('iGC_3V67ZFY', `iGC_3V67ZFY`)">
-          <img src="https://i.ytimg.com/vi/iGC_3V67ZFY/hqdefault.jpg" alt="">
-          <div class="t">iGC_3V67ZFY</div>
-        </button>
-        
-        <button class="item" onclick="play('3m9R6sgO91w', `3m9R6sgO91w`)">
-          <img src="https://i.ytimg.com/vi/3m9R6sgO91w/hqdefault.jpg" alt="">
-          <div class="t">3m9R6sgO91w</div>
-        </button>
-        
-        <button class="item" onclick="play('JL9nU6ykBr8', `JL9nU6ykBr8`)">
-          <img src="https://i.ytimg.com/vi/JL9nU6ykBr8/hqdefault.jpg" alt="">
-          <div class="t">JL9nU6ykBr8</div>
-        </button>
-        
-        <button class="item" onclick="play('jbXB2TwWGj4', `jbXB2TwWGj4`)">
-          <img src="https://i.ytimg.com/vi/jbXB2TwWGj4/hqdefault.jpg" alt="">
-          <div class="t">jbXB2TwWGj4</div>
-        </button>
-        
-        <button class="item" onclick="play('T0sM08dEZ9w', `T0sM08dEZ9w`)">
-          <img src="https://i.ytimg.com/vi/T0sM08dEZ9w/hqdefault.jpg" alt="">
-          <div class="t">T0sM08dEZ9w</div>
-        </button>
-        
-        <button class="item" onclick="play('6pryXZZyncU', `6pryXZZyncU`)">
-          <img src="https://i.ytimg.com/vi/6pryXZZyncU/hqdefault.jpg" alt="">
-          <div class="t">6pryXZZyncU</div>
-        </button>
-        
-        <button class="item" onclick="play('kEK6Gsx3-Qo', `kEK6Gsx3-Qo`)">
-          <img src="https://i.ytimg.com/vi/kEK6Gsx3-Qo/hqdefault.jpg" alt="">
-          <div class="t">kEK6Gsx3-Qo</div>
-        </button>
-        
-        <button class="item" onclick="play('qVEVw5hKg2w', `qVEVw5hKg2w`)">
-          <img src="https://i.ytimg.com/vi/qVEVw5hKg2w/hqdefault.jpg" alt="">
-          <div class="t">qVEVw5hKg2w</div>
-        </button>
-        
-        <button class="item" onclick="play('LyHoCQzw3XI', `LyHoCQzw3XI`)">
-          <img src="https://i.ytimg.com/vi/LyHoCQzw3XI/hqdefault.jpg" alt="">
-          <div class="t">LyHoCQzw3XI</div>
-        </button>
-        
-        <button class="item" onclick="play('6WYBe1ANFCo', `6WYBe1ANFCo`)">
-          <img src="https://i.ytimg.com/vi/6WYBe1ANFCo/hqdefault.jpg" alt="">
-          <div class="t">6WYBe1ANFCo</div>
-        </button>
-        
-        <button class="item" onclick="play('4CR5IE2xNzI', `4CR5IE2xNzI`)">
-          <img src="https://i.ytimg.com/vi/4CR5IE2xNzI/hqdefault.jpg" alt="">
-          <div class="t">4CR5IE2xNzI</div>
-        </button>
-        
-        <button class="item" onclick="play('IyHzYqGXKj0', `IyHzYqGXKj0`)">
-          <img src="https://i.ytimg.com/vi/IyHzYqGXKj0/hqdefault.jpg" alt="">
-          <div class="t">IyHzYqGXKj0</div>
-        </button>
-        
-        <button class="item" onclick="play('3Q0Htm6X3OU', `3Q0Htm6X3OU`)">
-          <img src="https://i.ytimg.com/vi/3Q0Htm6X3OU/hqdefault.jpg" alt="">
-          <div class="t">3Q0Htm6X3OU</div>
-        </button>
-        
-        <button class="item" onclick="play('u_p0ZueVe4s', `u_p0ZueVe4s`)">
-          <img src="https://i.ytimg.com/vi/u_p0ZueVe4s/hqdefault.jpg" alt="">
-          <div class="t">u_p0ZueVe4s</div>
-        </button>
-        
-        <button class="item" onclick="play('Cc3UVH1e4wQ', `Cc3UVH1e4wQ`)">
-          <img src="https://i.ytimg.com/vi/Cc3UVH1e4wQ/hqdefault.jpg" alt="">
-          <div class="t">Cc3UVH1e4wQ</div>
-        </button>
-        
-        <button class="item" onclick="play('gQVn853U-EU', `gQVn853U-EU`)">
-          <img src="https://i.ytimg.com/vi/gQVn853U-EU/hqdefault.jpg" alt="">
-          <div class="t">gQVn853U-EU</div>
-        </button>
-        
-        <button class="item" onclick="play('cKgXFXfanOQ', `cKgXFXfanOQ`)">
-          <img src="https://i.ytimg.com/vi/cKgXFXfanOQ/hqdefault.jpg" alt="">
-          <div class="t">cKgXFXfanOQ</div>
-        </button>
-        
-        <button class="item" onclick="play('qpT-CaKGtdU', `qpT-CaKGtdU`)">
-          <img src="https://i.ytimg.com/vi/qpT-CaKGtdU/hqdefault.jpg" alt="">
-          <div class="t">qpT-CaKGtdU</div>
-        </button>
-        
-        <button class="item" onclick="play('RBu5beO1g5w', `RBu5beO1g5w`)">
-          <img src="https://i.ytimg.com/vi/RBu5beO1g5w/hqdefault.jpg" alt="">
-          <div class="t">RBu5beO1g5w</div>
-        </button>
-        
-        <button class="item" onclick="play('DQ0eDl2J1e8', `DQ0eDl2J1e8`)">
-          <img src="https://i.ytimg.com/vi/DQ0eDl2J1e8/hqdefault.jpg" alt="">
-          <div class="t">DQ0eDl2J1e8</div>
-        </button>
-        
-        <button class="item" onclick="play('ijwYltOYn7s', `ijwYltOYn7s`)">
-          <img src="https://i.ytimg.com/vi/ijwYltOYn7s/hqdefault.jpg" alt="">
-          <div class="t">ijwYltOYn7s</div>
-        </button>
-        
-        <button class="item" onclick="play('LufmC3ozsc8', `LufmC3ozsc8`)">
-          <img src="https://i.ytimg.com/vi/LufmC3ozsc8/hqdefault.jpg" alt="">
-          <div class="t">LufmC3ozsc8</div>
-        </button>
-        
-        <button class="item" onclick="play('naDc4tOk3t8', `naDc4tOk3t8`)">
-          <img src="https://i.ytimg.com/vi/naDc4tOk3t8/hqdefault.jpg" alt="">
-          <div class="t">naDc4tOk3t8</div>
-        </button>
-        
-        <button class="item" onclick="play('lo000EIoSyw', `lo000EIoSyw`)">
-          <img src="https://i.ytimg.com/vi/lo000EIoSyw/hqdefault.jpg" alt="">
-          <div class="t">lo000EIoSyw</div>
-        </button>
-        
-        <button class="item" onclick="play('VoieQ1QpQAE', `VoieQ1QpQAE`)">
-          <img src="https://i.ytimg.com/vi/VoieQ1QpQAE/hqdefault.jpg" alt="">
-          <div class="t">VoieQ1QpQAE</div>
-        </button>
-        
-        <button class="item" onclick="play('5YaY9MHsLTY', `5YaY9MHsLTY`)">
-          <img src="https://i.ytimg.com/vi/5YaY9MHsLTY/hqdefault.jpg" alt="">
-          <div class="t">5YaY9MHsLTY</div>
-        </button>
-        
-        <button class="item" onclick="play('K0xGC6YpXWA', `K0xGC6YpXWA`)">
-          <img src="https://i.ytimg.com/vi/K0xGC6YpXWA/hqdefault.jpg" alt="">
-          <div class="t">K0xGC6YpXWA</div>
-        </button>
-        
-        <button class="item" onclick="play('_gfMft4Gxmk', `_gfMft4Gxmk`)">
-          <img src="https://i.ytimg.com/vi/_gfMft4Gxmk/hqdefault.jpg" alt="">
-          <div class="t">_gfMft4Gxmk</div>
-        </button>
-        
-        <button class="item" onclick="play('zFdVvaTSX9w', `zFdVvaTSX9w`)">
-          <img src="https://i.ytimg.com/vi/zFdVvaTSX9w/hqdefault.jpg" alt="">
-          <div class="t">zFdVvaTSX9w</div>
-        </button>
-        
-        <button class="item" onclick="play('XHc3mV2CnSk', `XHc3mV2CnSk`)">
-          <img src="https://i.ytimg.com/vi/XHc3mV2CnSk/hqdefault.jpg" alt="">
-          <div class="t">XHc3mV2CnSk</div>
-        </button>
-        
-        <button class="item" onclick="play('mWlIGzUTXqc', `mWlIGzUTXqc`)">
-          <img src="https://i.ytimg.com/vi/mWlIGzUTXqc/hqdefault.jpg" alt="">
-          <div class="t">mWlIGzUTXqc</div>
-        </button>
-        
-        <button class="item" onclick="play('r8xiwbmuMCc', `r8xiwbmuMCc`)">
-          <img src="https://i.ytimg.com/vi/r8xiwbmuMCc/hqdefault.jpg" alt="">
-          <div class="t">r8xiwbmuMCc</div>
-        </button>
-        
-        <button class="item" onclick="play('XPDXgJylWL4', `XPDXgJylWL4`)">
-          <img src="https://i.ytimg.com/vi/XPDXgJylWL4/hqdefault.jpg" alt="">
-          <div class="t">XPDXgJylWL4</div>
-        </button>
-        
-        <button class="item" onclick="play('-Slcpg-qcsA', `-Slcpg-qcsA`)">
-          <img src="https://i.ytimg.com/vi/-Slcpg-qcsA/hqdefault.jpg" alt="">
-          <div class="t">-Slcpg-qcsA</div>
-        </button>
-        
-        <button class="item" onclick="play('sPOxsVzp5qU', `sPOxsVzp5qU`)">
-          <img src="https://i.ytimg.com/vi/sPOxsVzp5qU/hqdefault.jpg" alt="">
-          <div class="t">sPOxsVzp5qU</div>
-        </button>
-        
-        <button class="item" onclick="play('jYFuYcvsTlI', `jYFuYcvsTlI`)">
-          <img src="https://i.ytimg.com/vi/jYFuYcvsTlI/hqdefault.jpg" alt="">
-          <div class="t">jYFuYcvsTlI</div>
-        </button>
-        
-        <button class="item" onclick="play('OButIU0X_Ro', `OButIU0X_Ro`)">
-          <img src="https://i.ytimg.com/vi/OButIU0X_Ro/hqdefault.jpg" alt="">
-          <div class="t">OButIU0X_Ro</div>
-        </button>
-        
-        <button class="item" onclick="play('Hk1IewTXeug', `Hk1IewTXeug`)">
-          <img src="https://i.ytimg.com/vi/Hk1IewTXeug/hqdefault.jpg" alt="">
-          <div class="t">Hk1IewTXeug</div>
-        </button>
-        
-        <button class="item" onclick="play('7LQQKeVGyFY', `7LQQKeVGyFY`)">
-          <img src="https://i.ytimg.com/vi/7LQQKeVGyFY/hqdefault.jpg" alt="">
-          <div class="t">7LQQKeVGyFY</div>
-        </button>
-        
-        <button class="item" onclick="play('F-GDK7W8K6U', `F-GDK7W8K6U`)">
-          <img src="https://i.ytimg.com/vi/F-GDK7W8K6U/hqdefault.jpg" alt="">
-          <div class="t">F-GDK7W8K6U</div>
-        </button>
-        
-        <button class="item" onclick="play('xMuVwD9RP70', `xMuVwD9RP70`)">
-          <img src="https://i.ytimg.com/vi/xMuVwD9RP70/hqdefault.jpg" alt="">
-          <div class="t">xMuVwD9RP70</div>
-        </button>
-        
-        <button class="item" onclick="play('8BM0qC7Ii7g', `8BM0qC7Ii7g`)">
-          <img src="https://i.ytimg.com/vi/8BM0qC7Ii7g/hqdefault.jpg" alt="">
-          <div class="t">8BM0qC7Ii7g</div>
-        </button>
-        
-        <button class="item" onclick="play('jmJlGwIH4PY', `jmJlGwIH4PY`)">
-          <img src="https://i.ytimg.com/vi/jmJlGwIH4PY/hqdefault.jpg" alt="">
-          <div class="t">jmJlGwIH4PY</div>
-        </button>
-        
-        <button class="item" onclick="play('GDMFtdzxHrY', `GDMFtdzxHrY`)">
-          <img src="https://i.ytimg.com/vi/GDMFtdzxHrY/hqdefault.jpg" alt="">
-          <div class="t">GDMFtdzxHrY</div>
-        </button>
-        
-        <button class="item" onclick="play('bQnRHxCy2WU', `bQnRHxCy2WU`)">
-          <img src="https://i.ytimg.com/vi/bQnRHxCy2WU/hqdefault.jpg" alt="">
-          <div class="t">bQnRHxCy2WU</div>
-        </button>
-        
-        <button class="item" onclick="play('Oz7myT4asdU', `Oz7myT4asdU`)">
-          <img src="https://i.ytimg.com/vi/Oz7myT4asdU/hqdefault.jpg" alt="">
-          <div class="t">Oz7myT4asdU</div>
-        </button>
-        
-        <button class="item" onclick="play('SG0PB9w3MMg', `SG0PB9w3MMg`)">
-          <img src="https://i.ytimg.com/vi/SG0PB9w3MMg/hqdefault.jpg" alt="">
-          <div class="t">SG0PB9w3MMg</div>
-        </button>
-        
-        <button class="item" onclick="play('NwDF_IrR5Wg', `NwDF_IrR5Wg`)">
-          <img src="https://i.ytimg.com/vi/NwDF_IrR5Wg/hqdefault.jpg" alt="">
-          <div class="t">NwDF_IrR5Wg</div>
-        </button>
-        
-        <button class="item" onclick="play('Ep-Gx2RWqpU', `Ep-Gx2RWqpU`)">
-          <img src="https://i.ytimg.com/vi/Ep-Gx2RWqpU/hqdefault.jpg" alt="">
-          <div class="t">Ep-Gx2RWqpU</div>
-        </button>
-        
-        <button class="item" onclick="play('8DledVGDr_0', `8DledVGDr_0`)">
-          <img src="https://i.ytimg.com/vi/8DledVGDr_0/hqdefault.jpg" alt="">
-          <div class="t">8DledVGDr_0</div>
-        </button>
-        
-        <button class="item" onclick="play('kiAyKvaL948', `kiAyKvaL948`)">
-          <img src="https://i.ytimg.com/vi/kiAyKvaL948/hqdefault.jpg" alt="">
-          <div class="t">kiAyKvaL948</div>
-        </button>
-        
-        <button class="item" onclick="play('TshrzF0uQJ0', `TshrzF0uQJ0`)">
-          <img src="https://i.ytimg.com/vi/TshrzF0uQJ0/hqdefault.jpg" alt="">
-          <div class="t">TshrzF0uQJ0</div>
-        </button>
-        
-        <button class="item" onclick="play('ET7AjawVW3s', `ET7AjawVW3s`)">
-          <img src="https://i.ytimg.com/vi/ET7AjawVW3s/hqdefault.jpg" alt="">
-          <div class="t">ET7AjawVW3s</div>
-        </button>
-        
-        <button class="item" onclick="play('dshgf_UOO-E', `dshgf_UOO-E`)">
-          <img src="https://i.ytimg.com/vi/dshgf_UOO-E/hqdefault.jpg" alt="">
-          <div class="t">dshgf_UOO-E</div>
-        </button>
-        
-        <button class="item" onclick="play('VrE6pNxcKSs', `VrE6pNxcKSs`)">
-          <img src="https://i.ytimg.com/vi/VrE6pNxcKSs/hqdefault.jpg" alt="">
-          <div class="t">VrE6pNxcKSs</div>
-        </button>
-        
-        <button class="item" onclick="play('YjJ1FtYLvEw', `YjJ1FtYLvEw`)">
-          <img src="https://i.ytimg.com/vi/YjJ1FtYLvEw/hqdefault.jpg" alt="">
-          <div class="t">YjJ1FtYLvEw</div>
-        </button>
-        
-        <button class="item" onclick="play('g9Fth2O1008', `g9Fth2O1008`)">
-          <img src="https://i.ytimg.com/vi/g9Fth2O1008/hqdefault.jpg" alt="">
-          <div class="t">g9Fth2O1008</div>
-        </button>
-        
-        <button class="item" onclick="play('2wVvIcjQvUk', `2wVvIcjQvUk`)">
-          <img src="https://i.ytimg.com/vi/2wVvIcjQvUk/hqdefault.jpg" alt="">
-          <div class="t">2wVvIcjQvUk</div>
-        </button>
-        
-        <button class="item" onclick="play('u39VTdjH-Gk', `u39VTdjH-Gk`)">
-          <img src="https://i.ytimg.com/vi/u39VTdjH-Gk/hqdefault.jpg" alt="">
-          <div class="t">u39VTdjH-Gk</div>
-        </button>
-        
-        <button class="item" onclick="play('5fH_C2lLuoo', `5fH_C2lLuoo`)">
-          <img src="https://i.ytimg.com/vi/5fH_C2lLuoo/hqdefault.jpg" alt="">
-          <div class="t">5fH_C2lLuoo</div>
-        </button>
-        
-        <button class="item" onclick="play('3b1AZsBWAI0', `3b1AZsBWAI0`)">
-          <img src="https://i.ytimg.com/vi/3b1AZsBWAI0/hqdefault.jpg" alt="">
-          <div class="t">3b1AZsBWAI0</div>
-        </button>
-        
-        <button class="item" onclick="play('ThRFyo5BDH4', `ThRFyo5BDH4`)">
-          <img src="https://i.ytimg.com/vi/ThRFyo5BDH4/hqdefault.jpg" alt="">
-          <div class="t">ThRFyo5BDH4</div>
-        </button>
-        
-        <button class="item" onclick="play('erM9ydYnOcQ', `erM9ydYnOcQ`)">
-          <img src="https://i.ytimg.com/vi/erM9ydYnOcQ/hqdefault.jpg" alt="">
-          <div class="t">erM9ydYnOcQ</div>
-        </button>
-        
-        <button class="item" onclick="play('DV6LKV_PMpc', `DV6LKV_PMpc`)">
-          <img src="https://i.ytimg.com/vi/DV6LKV_PMpc/hqdefault.jpg" alt="">
-          <div class="t">DV6LKV_PMpc</div>
-        </button>
-        
-        <button class="item" onclick="play('6hE-sz3xUfk', `6hE-sz3xUfk`)">
-          <img src="https://i.ytimg.com/vi/6hE-sz3xUfk/hqdefault.jpg" alt="">
-          <div class="t">6hE-sz3xUfk</div>
-        </button>
-        
-        <button class="item" onclick="play('KbClfKlt8W4', `KbClfKlt8W4`)">
-          <img src="https://i.ytimg.com/vi/KbClfKlt8W4/hqdefault.jpg" alt="">
-          <div class="t">KbClfKlt8W4</div>
-        </button>
-        
-        <button class="item" onclick="play('5bUcNMzHG2Q', `5bUcNMzHG2Q`)">
-          <img src="https://i.ytimg.com/vi/5bUcNMzHG2Q/hqdefault.jpg" alt="">
-          <div class="t">5bUcNMzHG2Q</div>
-        </button>
-        
-        <button class="item" onclick="play('eQpNanzWbUM', `eQpNanzWbUM`)">
-          <img src="https://i.ytimg.com/vi/eQpNanzWbUM/hqdefault.jpg" alt="">
-          <div class="t">eQpNanzWbUM</div>
-        </button>
-        
-        <button class="item" onclick="play('rMSct1ywz9s', `rMSct1ywz9s`)">
-          <img src="https://i.ytimg.com/vi/rMSct1ywz9s/hqdefault.jpg" alt="">
-          <div class="t">rMSct1ywz9s</div>
-        </button>
-        
-        <button class="item" onclick="play('TMZH0uuaHwo', `TMZH0uuaHwo`)">
-          <img src="https://i.ytimg.com/vi/TMZH0uuaHwo/hqdefault.jpg" alt="">
-          <div class="t">TMZH0uuaHwo</div>
-        </button>
-        
-        <button class="item" onclick="play('-13pkTHYyjw', `-13pkTHYyjw`)">
-          <img src="https://i.ytimg.com/vi/-13pkTHYyjw/hqdefault.jpg" alt="">
-          <div class="t">-13pkTHYyjw</div>
-        </button>
-        
-        <button class="item" onclick="play('2gGCs0q7Kis', `2gGCs0q7Kis`)">
-          <img src="https://i.ytimg.com/vi/2gGCs0q7Kis/hqdefault.jpg" alt="">
-          <div class="t">2gGCs0q7Kis</div>
-        </button>
-        
-        <button class="item" onclick="play('ZHlgP1YnvCs', `ZHlgP1YnvCs`)">
-          <img src="https://i.ytimg.com/vi/ZHlgP1YnvCs/hqdefault.jpg" alt="">
-          <div class="t">ZHlgP1YnvCs</div>
-        </button>
-        
-        <button class="item" onclick="play('jNa_8phQ7dY', `jNa_8phQ7dY`)">
-          <img src="https://i.ytimg.com/vi/jNa_8phQ7dY/hqdefault.jpg" alt="">
-          <div class="t">jNa_8phQ7dY</div>
-        </button>
-        
-        <button class="item" onclick="play('Hi93DPtemUM', `Hi93DPtemUM`)">
-          <img src="https://i.ytimg.com/vi/Hi93DPtemUM/hqdefault.jpg" alt="">
-          <div class="t">Hi93DPtemUM</div>
-        </button>
-        
-        <button class="item" onclick="play('HZ6WUv9YO4g', `HZ6WUv9YO4g`)">
-          <img src="https://i.ytimg.com/vi/HZ6WUv9YO4g/hqdefault.jpg" alt="">
-          <div class="t">HZ6WUv9YO4g</div>
-        </button>
-        
-        <button class="item" onclick="play('3tB77P3gQWo', `3tB77P3gQWo`)">
-          <img src="https://i.ytimg.com/vi/3tB77P3gQWo/hqdefault.jpg" alt="">
-          <div class="t">3tB77P3gQWo</div>
-        </button>
-        
-        <button class="item" onclick="play('NpAX_DOxMnk', `NpAX_DOxMnk`)">
-          <img src="https://i.ytimg.com/vi/NpAX_DOxMnk/hqdefault.jpg" alt="">
-          <div class="t">NpAX_DOxMnk</div>
-        </button>
-        
-        <button class="item" onclick="play('T4SVkW2vtLw', `T4SVkW2vtLw`)">
-          <img src="https://i.ytimg.com/vi/T4SVkW2vtLw/hqdefault.jpg" alt="">
-          <div class="t">T4SVkW2vtLw</div>
-        </button>
-        
-        <button class="item" onclick="play('A7tw38ISydE', `A7tw38ISydE`)">
-          <img src="https://i.ytimg.com/vi/A7tw38ISydE/hqdefault.jpg" alt="">
-          <div class="t">A7tw38ISydE</div>
-        </button>
-        
-        <button class="item" onclick="play('V_ZNqri1H3U', `V_ZNqri1H3U`)">
-          <img src="https://i.ytimg.com/vi/V_ZNqri1H3U/hqdefault.jpg" alt="">
-          <div class="t">V_ZNqri1H3U</div>
-        </button>
-        
-        <button class="item" onclick="play('mB0ma2i5MJQ', `mB0ma2i5MJQ`)">
-          <img src="https://i.ytimg.com/vi/mB0ma2i5MJQ/hqdefault.jpg" alt="">
-          <div class="t">mB0ma2i5MJQ</div>
-        </button>
-        
-        <button class="item" onclick="play('9OyoI3h9eI4', `9OyoI3h9eI4`)">
-          <img src="https://i.ytimg.com/vi/9OyoI3h9eI4/hqdefault.jpg" alt="">
-          <div class="t">9OyoI3h9eI4</div>
-        </button>
-        
-        <button class="item" onclick="play('Dqo9XgKyC2k', `Dqo9XgKyC2k`)">
-          <img src="https://i.ytimg.com/vi/Dqo9XgKyC2k/hqdefault.jpg" alt="">
-          <div class="t">Dqo9XgKyC2k</div>
-        </button>
-        
-        <button class="item" onclick="play('EYJusQ492Wk', `EYJusQ492Wk`)">
-          <img src="https://i.ytimg.com/vi/EYJusQ492Wk/hqdefault.jpg" alt="">
-          <div class="t">EYJusQ492Wk</div>
-        </button>
-        
-        <button class="item" onclick="play('QnSL3H0swrE', `QnSL3H0swrE`)">
-          <img src="https://i.ytimg.com/vi/QnSL3H0swrE/hqdefault.jpg" alt="">
-          <div class="t">QnSL3H0swrE</div>
-        </button>
-        
-        <button class="item" onclick="play('blJF-0j4liU', `blJF-0j4liU`)">
-          <img src="https://i.ytimg.com/vi/blJF-0j4liU/hqdefault.jpg" alt="">
-          <div class="t">blJF-0j4liU</div>
-        </button>
-        
-        <button class="item" onclick="play('11SQLY-o5jA', `11SQLY-o5jA`)">
-          <img src="https://i.ytimg.com/vi/11SQLY-o5jA/hqdefault.jpg" alt="">
-          <div class="t">11SQLY-o5jA</div>
-        </button>
-        
-        <button class="item" onclick="play('Ddg7G6RouWw', `Ddg7G6RouWw`)">
-          <img src="https://i.ytimg.com/vi/Ddg7G6RouWw/hqdefault.jpg" alt="">
-          <div class="t">Ddg7G6RouWw</div>
-        </button>
-        
-        <button class="item" onclick="play('O5RIgeEB2x0', `O5RIgeEB2x0`)">
-          <img src="https://i.ytimg.com/vi/O5RIgeEB2x0/hqdefault.jpg" alt="">
-          <div class="t">O5RIgeEB2x0</div>
-        </button>
-        
-        <button class="item" onclick="play('W_Q_VKbni64', `W_Q_VKbni64`)">
-          <img src="https://i.ytimg.com/vi/W_Q_VKbni64/hqdefault.jpg" alt="">
-          <div class="t">W_Q_VKbni64</div>
-        </button>
-        
-        <button class="item" onclick="play('hAJZRFRdOKw', `hAJZRFRdOKw`)">
-          <img src="https://i.ytimg.com/vi/hAJZRFRdOKw/hqdefault.jpg" alt="">
-          <div class="t">hAJZRFRdOKw</div>
-        </button>
-        
-        <button class="item" onclick="play('WnzsopHIb6w', `WnzsopHIb6w`)">
-          <img src="https://i.ytimg.com/vi/WnzsopHIb6w/hqdefault.jpg" alt="">
-          <div class="t">WnzsopHIb6w</div>
-        </button>
-        
-        <button class="item" onclick="play('JVms-ZV-Sz4', `JVms-ZV-Sz4`)">
-          <img src="https://i.ytimg.com/vi/JVms-ZV-Sz4/hqdefault.jpg" alt="">
-          <div class="t">JVms-ZV-Sz4</div>
-        </button>
-        
-        <button class="item" onclick="play('WOmQGdnLD-o', `WOmQGdnLD-o`)">
-          <img src="https://i.ytimg.com/vi/WOmQGdnLD-o/hqdefault.jpg" alt="">
-          <div class="t">WOmQGdnLD-o</div>
-        </button>
-        
-        <button class="item" onclick="play('Q-xV04-zXEc', `Q-xV04-zXEc`)">
-          <img src="https://i.ytimg.com/vi/Q-xV04-zXEc/hqdefault.jpg" alt="">
-          <div class="t">Q-xV04-zXEc</div>
-        </button>
-        
-        <button class="item" onclick="play('Vbmg9KGTZI4', `Vbmg9KGTZI4`)">
-          <img src="https://i.ytimg.com/vi/Vbmg9KGTZI4/hqdefault.jpg" alt="">
-          <div class="t">Vbmg9KGTZI4</div>
-        </button>
-        
-        <button class="item" onclick="play('GbBsJg4MEU4', `GbBsJg4MEU4`)">
-          <img src="https://i.ytimg.com/vi/GbBsJg4MEU4/hqdefault.jpg" alt="">
-          <div class="t">GbBsJg4MEU4</div>
-        </button>
-        
-        <button class="item" onclick="play('r149-MplvG4', `r149-MplvG4`)">
-          <img src="https://i.ytimg.com/vi/r149-MplvG4/hqdefault.jpg" alt="">
-          <div class="t">r149-MplvG4</div>
-        </button>
-        
-        <button class="item" onclick="play('sL1J-0bAl94', `sL1J-0bAl94`)">
-          <img src="https://i.ytimg.com/vi/sL1J-0bAl94/hqdefault.jpg" alt="">
-          <div class="t">sL1J-0bAl94</div>
-        </button>
-        
-        <button class="item" onclick="play('XdxPVh8upoQ', `XdxPVh8upoQ`)">
-          <img src="https://i.ytimg.com/vi/XdxPVh8upoQ/hqdefault.jpg" alt="">
-          <div class="t">XdxPVh8upoQ</div>
-        </button>
-        
-        <button class="item" onclick="play('4r_YSil6KR0', `4r_YSil6KR0`)">
-          <img src="https://i.ytimg.com/vi/4r_YSil6KR0/hqdefault.jpg" alt="">
-          <div class="t">4r_YSil6KR0</div>
-        </button>
-        
-        <button class="item" onclick="play('fUUJzPOVGs0', `fUUJzPOVGs0`)">
-          <img src="https://i.ytimg.com/vi/fUUJzPOVGs0/hqdefault.jpg" alt="">
-          <div class="t">fUUJzPOVGs0</div>
-        </button>
-        
-        <button class="item" onclick="play('wQfoH_OcYOw', `wQfoH_OcYOw`)">
-          <img src="https://i.ytimg.com/vi/wQfoH_OcYOw/hqdefault.jpg" alt="">
-          <div class="t">wQfoH_OcYOw</div>
-        </button>
-        
-        <button class="item" onclick="play('Vuta4Fs2GwQ', `Vuta4Fs2GwQ`)">
-          <img src="https://i.ytimg.com/vi/Vuta4Fs2GwQ/hqdefault.jpg" alt="">
-          <div class="t">Vuta4Fs2GwQ</div>
-        </button>
-        
-        <button class="item" onclick="play('VJw7WG5iSFc', `VJw7WG5iSFc`)">
-          <img src="https://i.ytimg.com/vi/VJw7WG5iSFc/hqdefault.jpg" alt="">
-          <div class="t">VJw7WG5iSFc</div>
-        </button>
-        
-        <button class="item" onclick="play('zCrlhaOhgZo', `zCrlhaOhgZo`)">
-          <img src="https://i.ytimg.com/vi/zCrlhaOhgZo/hqdefault.jpg" alt="">
-          <div class="t">zCrlhaOhgZo</div>
-        </button>
-        
-        <button class="item" onclick="play('q1lRRq2gr-I', `q1lRRq2gr-I`)">
-          <img src="https://i.ytimg.com/vi/q1lRRq2gr-I/hqdefault.jpg" alt="">
-          <div class="t">q1lRRq2gr-I</div>
-        </button>
-        
-        <button class="item" onclick="play('Dt8ujDW6-u8', `Dt8ujDW6-u8`)">
-          <img src="https://i.ytimg.com/vi/Dt8ujDW6-u8/hqdefault.jpg" alt="">
-          <div class="t">Dt8ujDW6-u8</div>
-        </button>
-        
-        <button class="item" onclick="play('RdXyi3FgwuA', `RdXyi3FgwuA`)">
-          <img src="https://i.ytimg.com/vi/RdXyi3FgwuA/hqdefault.jpg" alt="">
-          <div class="t">RdXyi3FgwuA</div>
-        </button>
-        
-        <button class="item" onclick="play('04lpBJadieE', `04lpBJadieE`)">
-          <img src="https://i.ytimg.com/vi/04lpBJadieE/hqdefault.jpg" alt="">
-          <div class="t">04lpBJadieE</div>
-        </button>
-        
-        <button class="item" onclick="play('QHVfrCGnSng', `QHVfrCGnSng`)">
-          <img src="https://i.ytimg.com/vi/QHVfrCGnSng/hqdefault.jpg" alt="">
-          <div class="t">QHVfrCGnSng</div>
-        </button>
-        
-        <button class="item" onclick="play('O9Z_Mpzc9pc', `O9Z_Mpzc9pc`)">
-          <img src="https://i.ytimg.com/vi/O9Z_Mpzc9pc/hqdefault.jpg" alt="">
-          <div class="t">O9Z_Mpzc9pc</div>
-        </button>
-        
-        <button class="item" onclick="play('e4XEfUYmwA8', `e4XEfUYmwA8`)">
-          <img src="https://i.ytimg.com/vi/e4XEfUYmwA8/hqdefault.jpg" alt="">
-          <div class="t">e4XEfUYmwA8</div>
-        </button>
-        
-        <button class="item" onclick="play('aUHb9Q6NqlY', `aUHb9Q6NqlY`)">
-          <img src="https://i.ytimg.com/vi/aUHb9Q6NqlY/hqdefault.jpg" alt="">
-          <div class="t">aUHb9Q6NqlY</div>
-        </button>
-        
-        <button class="item" onclick="play('tndDmrdtnNA', `tndDmrdtnNA`)">
-          <img src="https://i.ytimg.com/vi/tndDmrdtnNA/hqdefault.jpg" alt="">
-          <div class="t">tndDmrdtnNA</div>
-        </button>
-        
-        <button class="item" onclick="play('8C6IHiWiKtw', `8C6IHiWiKtw`)">
-          <img src="https://i.ytimg.com/vi/8C6IHiWiKtw/hqdefault.jpg" alt="">
-          <div class="t">8C6IHiWiKtw</div>
-        </button>
-        
-        <button class="item" onclick="play('-7rJ8rKQUe8', `-7rJ8rKQUe8`)">
-          <img src="https://i.ytimg.com/vi/-7rJ8rKQUe8/hqdefault.jpg" alt="">
-          <div class="t">-7rJ8rKQUe8</div>
-        </button>
-        
-        <button class="item" onclick="play('n5Wodlua_Jw', `n5Wodlua_Jw`)">
-          <img src="https://i.ytimg.com/vi/n5Wodlua_Jw/hqdefault.jpg" alt="">
-          <div class="t">n5Wodlua_Jw</div>
-        </button>
-        
-        <button class="item" onclick="play('qsWt6Oy7t7w', `qsWt6Oy7t7w`)">
-          <img src="https://i.ytimg.com/vi/qsWt6Oy7t7w/hqdefault.jpg" alt="">
-          <div class="t">qsWt6Oy7t7w</div>
-        </button>
-        
-        <button class="item" onclick="play('F8Pg9hYPTQw', `F8Pg9hYPTQw`)">
-          <img src="https://i.ytimg.com/vi/F8Pg9hYPTQw/hqdefault.jpg" alt="">
-          <div class="t">F8Pg9hYPTQw</div>
-        </button>
-        
-        <button class="item" onclick="play('s5zFMOIlfO4', `s5zFMOIlfO4`)">
-          <img src="https://i.ytimg.com/vi/s5zFMOIlfO4/hqdefault.jpg" alt="">
-          <div class="t">s5zFMOIlfO4</div>
-        </button>
-        
-        <button class="item" onclick="play('D62NHf-dcZg', `D62NHf-dcZg`)">
-          <img src="https://i.ytimg.com/vi/D62NHf-dcZg/hqdefault.jpg" alt="">
-          <div class="t">D62NHf-dcZg</div>
-        </button>
-        
-        <button class="item" onclick="play('9I608jT4-7w', `9I608jT4-7w`)">
-          <img src="https://i.ytimg.com/vi/9I608jT4-7w/hqdefault.jpg" alt="">
-          <div class="t">9I608jT4-7w</div>
-        </button>
-        
-        <button class="item" onclick="play('EiTfLWCpnoE', `EiTfLWCpnoE`)">
-          <img src="https://i.ytimg.com/vi/EiTfLWCpnoE/hqdefault.jpg" alt="">
-          <div class="t">EiTfLWCpnoE</div>
-        </button>
-        
-        <button class="item" onclick="play('lpyD1NV1iBU', `lpyD1NV1iBU`)">
-          <img src="https://i.ytimg.com/vi/lpyD1NV1iBU/hqdefault.jpg" alt="">
-          <div class="t">lpyD1NV1iBU</div>
-        </button>
-        
-        <button class="item" onclick="play('S76C1_a5BYk', `S76C1_a5BYk`)">
-          <img src="https://i.ytimg.com/vi/S76C1_a5BYk/hqdefault.jpg" alt="">
-          <div class="t">S76C1_a5BYk</div>
-        </button>
-        
-        <button class="item" onclick="play('iFgyadTDm_0', `iFgyadTDm_0`)">
-          <img src="https://i.ytimg.com/vi/iFgyadTDm_0/hqdefault.jpg" alt="">
-          <div class="t">iFgyadTDm_0</div>
-        </button>
-        
-        <button class="item" onclick="play('4768CsogrXs', `4768CsogrXs`)">
-          <img src="https://i.ytimg.com/vi/4768CsogrXs/hqdefault.jpg" alt="">
-          <div class="t">4768CsogrXs</div>
-        </button>
-        
-        <button class="item" onclick="play('kHtcaZ7P0hg', `kHtcaZ7P0hg`)">
-          <img src="https://i.ytimg.com/vi/kHtcaZ7P0hg/hqdefault.jpg" alt="">
-          <div class="t">kHtcaZ7P0hg</div>
-        </button>
-        
-        <button class="item" onclick="play('Z_32P73ysWM', `Z_32P73ysWM`)">
-          <img src="https://i.ytimg.com/vi/Z_32P73ysWM/hqdefault.jpg" alt="">
-          <div class="t">Z_32P73ysWM</div>
-        </button>
-        
-        <button class="item" onclick="play('Uzu2j2VUQdo', `Uzu2j2VUQdo`)">
-          <img src="https://i.ytimg.com/vi/Uzu2j2VUQdo/hqdefault.jpg" alt="">
-          <div class="t">Uzu2j2VUQdo</div>
-        </button>
-        
-        <button class="item" onclick="play('Uo1xR6PAZoM', `Uo1xR6PAZoM`)">
-          <img src="https://i.ytimg.com/vi/Uo1xR6PAZoM/hqdefault.jpg" alt="">
-          <div class="t">Uo1xR6PAZoM</div>
-        </button>
-        
-        <button class="item" onclick="play('HuhwFVmqWWw', `HuhwFVmqWWw`)">
-          <img src="https://i.ytimg.com/vi/HuhwFVmqWWw/hqdefault.jpg" alt="">
-          <div class="t">HuhwFVmqWWw</div>
-        </button>
-        
-        <button class="item" onclick="play('MDl4K4LuDRM', `MDl4K4LuDRM`)">
-          <img src="https://i.ytimg.com/vi/MDl4K4LuDRM/hqdefault.jpg" alt="">
-          <div class="t">MDl4K4LuDRM</div>
-        </button>
-        
-        <button class="item" onclick="play('FP6SlNDmv_A', `FP6SlNDmv_A`)">
-          <img src="https://i.ytimg.com/vi/FP6SlNDmv_A/hqdefault.jpg" alt="">
-          <div class="t">FP6SlNDmv_A</div>
-        </button>
-        
-        <button class="item" onclick="play('r10vZloF2JY', `r10vZloF2JY`)">
-          <img src="https://i.ytimg.com/vi/r10vZloF2JY/hqdefault.jpg" alt="">
-          <div class="t">r10vZloF2JY</div>
-        </button>
-        
-        <button class="item" onclick="play('nczVXKgJErQ', `nczVXKgJErQ`)">
-          <img src="https://i.ytimg.com/vi/nczVXKgJErQ/hqdefault.jpg" alt="">
-          <div class="t">nczVXKgJErQ</div>
-        </button>
-        
-        <button class="item" onclick="play('KPqz9wuoAWc', `KPqz9wuoAWc`)">
-          <img src="https://i.ytimg.com/vi/KPqz9wuoAWc/hqdefault.jpg" alt="">
-          <div class="t">KPqz9wuoAWc</div>
-        </button>
-        
-        <button class="item" onclick="play('fx_lwxh7YXY', `fx_lwxh7YXY`)">
-          <img src="https://i.ytimg.com/vi/fx_lwxh7YXY/hqdefault.jpg" alt="">
-          <div class="t">fx_lwxh7YXY</div>
-        </button>
-        
-        <button class="item" onclick="play('Da23igTg9sI', `Da23igTg9sI`)">
-          <img src="https://i.ytimg.com/vi/Da23igTg9sI/hqdefault.jpg" alt="">
-          <div class="t">Da23igTg9sI</div>
-        </button>
-        
-        <button class="item" onclick="play('yRJOM3bWSkM', `yRJOM3bWSkM`)">
-          <img src="https://i.ytimg.com/vi/yRJOM3bWSkM/hqdefault.jpg" alt="">
-          <div class="t">yRJOM3bWSkM</div>
-        </button>
-        
-        <button class="item" onclick="play('MWROpY68BIY', `MWROpY68BIY`)">
-          <img src="https://i.ytimg.com/vi/MWROpY68BIY/hqdefault.jpg" alt="">
-          <div class="t">MWROpY68BIY</div>
-        </button>
-        
-        <button class="item" onclick="play('wqxzevq9Dw8', `wqxzevq9Dw8`)">
-          <img src="https://i.ytimg.com/vi/wqxzevq9Dw8/hqdefault.jpg" alt="">
-          <div class="t">wqxzevq9Dw8</div>
-        </button>
-        
-        <button class="item" onclick="play('0G5ge7lmL98', `0G5ge7lmL98`)">
-          <img src="https://i.ytimg.com/vi/0G5ge7lmL98/hqdefault.jpg" alt="">
-          <div class="t">0G5ge7lmL98</div>
-        </button>
-        
-        <button class="item" onclick="play('ZE0ojqT5Nig', `ZE0ojqT5Nig`)">
-          <img src="https://i.ytimg.com/vi/ZE0ojqT5Nig/hqdefault.jpg" alt="">
-          <div class="t">ZE0ojqT5Nig</div>
-        </button>
-        
-        <button class="item" onclick="play('OU3Oj7gxHUc', `OU3Oj7gxHUc`)">
-          <img src="https://i.ytimg.com/vi/OU3Oj7gxHUc/hqdefault.jpg" alt="">
-          <div class="t">OU3Oj7gxHUc</div>
-        </button>
-        
-        <button class="item" onclick="play('ciXdUvQxKKI', `ciXdUvQxKKI`)">
-          <img src="https://i.ytimg.com/vi/ciXdUvQxKKI/hqdefault.jpg" alt="">
-          <div class="t">ciXdUvQxKKI</div>
-        </button>
-        
-        <button class="item" onclick="play('TRrU9n717Fg', `TRrU9n717Fg`)">
-          <img src="https://i.ytimg.com/vi/TRrU9n717Fg/hqdefault.jpg" alt="">
-          <div class="t">TRrU9n717Fg</div>
-        </button>
-        
-        <button class="item" onclick="play('gd_ZPrhfWaE', `gd_ZPrhfWaE`)">
-          <img src="https://i.ytimg.com/vi/gd_ZPrhfWaE/hqdefault.jpg" alt="">
-          <div class="t">gd_ZPrhfWaE</div>
-        </button>
-        
-        <button class="item" onclick="play('-uURzOLVf0E', `-uURzOLVf0E`)">
-          <img src="https://i.ytimg.com/vi/-uURzOLVf0E/hqdefault.jpg" alt="">
-          <div class="t">-uURzOLVf0E</div>
-        </button>
-        
-        <button class="item" onclick="play('cndTGBGNP6g', `cndTGBGNP6g`)">
-          <img src="https://i.ytimg.com/vi/cndTGBGNP6g/hqdefault.jpg" alt="">
-          <div class="t">cndTGBGNP6g</div>
-        </button>
-        
-        <button class="item" onclick="play('7qvWubQ6A5g', `7qvWubQ6A5g`)">
-          <img src="https://i.ytimg.com/vi/7qvWubQ6A5g/hqdefault.jpg" alt="">
-          <div class="t">7qvWubQ6A5g</div>
-        </button>
-        
-        <button class="item" onclick="play('S-82ST2qbAw', `S-82ST2qbAw`)">
-          <img src="https://i.ytimg.com/vi/S-82ST2qbAw/hqdefault.jpg" alt="">
-          <div class="t">S-82ST2qbAw</div>
-        </button>
-        
-        <button class="item" onclick="play('7uhQsn4RV90', `7uhQsn4RV90`)">
-          <img src="https://i.ytimg.com/vi/7uhQsn4RV90/hqdefault.jpg" alt="">
-          <div class="t">7uhQsn4RV90</div>
-        </button>
-        
-        <button class="item" onclick="play('oFyuukkewEU', `oFyuukkewEU`)">
-          <img src="https://i.ytimg.com/vi/oFyuukkewEU/hqdefault.jpg" alt="">
-          <div class="t">oFyuukkewEU</div>
-        </button>
-        
-        <button class="item" onclick="play('RmHqTpcFNjU', `RmHqTpcFNjU`)">
-          <img src="https://i.ytimg.com/vi/RmHqTpcFNjU/hqdefault.jpg" alt="">
-          <div class="t">RmHqTpcFNjU</div>
-        </button>
-        
-        <button class="item" onclick="play('wg3lwoyru7A', `wg3lwoyru7A`)">
-          <img src="https://i.ytimg.com/vi/wg3lwoyru7A/hqdefault.jpg" alt="">
-          <div class="t">wg3lwoyru7A</div>
-        </button>
-        
-        <button class="item" onclick="play('n3OT8JI-8S4', `n3OT8JI-8S4`)">
-          <img src="https://i.ytimg.com/vi/n3OT8JI-8S4/hqdefault.jpg" alt="">
-          <div class="t">n3OT8JI-8S4</div>
-        </button>
-        
-        <button class="item" onclick="play('c40fLGGnAZQ', `c40fLGGnAZQ`)">
-          <img src="https://i.ytimg.com/vi/c40fLGGnAZQ/hqdefault.jpg" alt="">
-          <div class="t">c40fLGGnAZQ</div>
-        </button>
-        
-        <button class="item" onclick="play('nOPo0PHSa1o', `nOPo0PHSa1o`)">
-          <img src="https://i.ytimg.com/vi/nOPo0PHSa1o/hqdefault.jpg" alt="">
-          <div class="t">nOPo0PHSa1o</div>
-        </button>
-        
-        <button class="item" onclick="play('ZP9wQCPSgp0', `ZP9wQCPSgp0`)">
-          <img src="https://i.ytimg.com/vi/ZP9wQCPSgp0/hqdefault.jpg" alt="">
-          <div class="t">ZP9wQCPSgp0</div>
-        </button>
-        
-        <button class="item" onclick="play('tYeBlFtebQM', `tYeBlFtebQM`)">
-          <img src="https://i.ytimg.com/vi/tYeBlFtebQM/hqdefault.jpg" alt="">
-          <div class="t">tYeBlFtebQM</div>
-        </button>
-        
-        <button class="item" onclick="play('t30-JfkQVZo', `t30-JfkQVZo`)">
-          <img src="https://i.ytimg.com/vi/t30-JfkQVZo/hqdefault.jpg" alt="">
-          <div class="t">t30-JfkQVZo</div>
-        </button>
-        
-        <button class="item" onclick="play('SV-D8Iyfl_8', `SV-D8Iyfl_8`)">
-          <img src="https://i.ytimg.com/vi/SV-D8Iyfl_8/hqdefault.jpg" alt="">
-          <div class="t">SV-D8Iyfl_8</div>
-        </button>
-        
-        <button class="item" onclick="play('Tc7LZtzK_zI', `Tc7LZtzK_zI`)">
-          <img src="https://i.ytimg.com/vi/Tc7LZtzK_zI/hqdefault.jpg" alt="">
-          <div class="t">Tc7LZtzK_zI</div>
-        </button>
-        
-        <button class="item" onclick="play('9WUH9ooJ1Hw', `9WUH9ooJ1Hw`)">
-          <img src="https://i.ytimg.com/vi/9WUH9ooJ1Hw/hqdefault.jpg" alt="">
-          <div class="t">9WUH9ooJ1Hw</div>
-        </button>
-        
-        <button class="item" onclick="play('th3xXrnVL4M', `th3xXrnVL4M`)">
-          <img src="https://i.ytimg.com/vi/th3xXrnVL4M/hqdefault.jpg" alt="">
-          <div class="t">th3xXrnVL4M</div>
-        </button>
-        
-        <button class="item" onclick="play('tuzMYJLEAOg', `tuzMYJLEAOg`)">
-          <img src="https://i.ytimg.com/vi/tuzMYJLEAOg/hqdefault.jpg" alt="">
-          <div class="t">tuzMYJLEAOg</div>
-        </button>
-        
-        <button class="item" onclick="play('Q2RA99Wfq0k', `Q2RA99Wfq0k`)">
-          <img src="https://i.ytimg.com/vi/Q2RA99Wfq0k/hqdefault.jpg" alt="">
-          <div class="t">Q2RA99Wfq0k</div>
-        </button>
-        
-        <button class="item" onclick="play('U2xDT8lOojY', `U2xDT8lOojY`)">
-          <img src="https://i.ytimg.com/vi/U2xDT8lOojY/hqdefault.jpg" alt="">
-          <div class="t">U2xDT8lOojY</div>
-        </button>
-        
-        <button class="item" onclick="play('Jj8QkeoDVT8', `Jj8QkeoDVT8`)">
-          <img src="https://i.ytimg.com/vi/Jj8QkeoDVT8/hqdefault.jpg" alt="">
-          <div class="t">Jj8QkeoDVT8</div>
-        </button>
-        
-        <button class="item" onclick="play('2xT2YvRExz0', `2xT2YvRExz0`)">
-          <img src="https://i.ytimg.com/vi/2xT2YvRExz0/hqdefault.jpg" alt="">
-          <div class="t">2xT2YvRExz0</div>
-        </button>
-        
-        <button class="item" onclick="play('0x6O57J98e8', `0x6O57J98e8`)">
-          <img src="https://i.ytimg.com/vi/0x6O57J98e8/hqdefault.jpg" alt="">
-          <div class="t">0x6O57J98e8</div>
-        </button>
-        
-        <button class="item" onclick="play('WC5XbVwhcog', `WC5XbVwhcog`)">
-          <img src="https://i.ytimg.com/vi/WC5XbVwhcog/hqdefault.jpg" alt="">
-          <div class="t">WC5XbVwhcog</div>
-        </button>
-        
-        <button class="item" onclick="play('a7LAfqzU1hE', `a7LAfqzU1hE`)">
-          <img src="https://i.ytimg.com/vi/a7LAfqzU1hE/hqdefault.jpg" alt="">
-          <div class="t">a7LAfqzU1hE</div>
-        </button>
-        
-        <button class="item" onclick="play('DTzTxaEz8NY', `DTzTxaEz8NY`)">
-          <img src="https://i.ytimg.com/vi/DTzTxaEz8NY/hqdefault.jpg" alt="">
-          <div class="t">DTzTxaEz8NY</div>
-        </button>
-        
-        <button class="item" onclick="play('UF7uL54p7gU', `UF7uL54p7gU`)">
-          <img src="https://i.ytimg.com/vi/UF7uL54p7gU/hqdefault.jpg" alt="">
-          <div class="t">UF7uL54p7gU</div>
-        </button>
-        
-        <button class="item" onclick="play('NwJGqOMhKg4', `NwJGqOMhKg4`)">
-          <img src="https://i.ytimg.com/vi/NwJGqOMhKg4/hqdefault.jpg" alt="">
-          <div class="t">NwJGqOMhKg4</div>
-        </button>
-        
-        <button class="item" onclick="play('1ACa-NW8-TU', `1ACa-NW8-TU`)">
-          <img src="https://i.ytimg.com/vi/1ACa-NW8-TU/hqdefault.jpg" alt="">
-          <div class="t">1ACa-NW8-TU</div>
-        </button>
-        
-        <button class="item" onclick="play('TyyiL30Ro1g', `TyyiL30Ro1g`)">
-          <img src="https://i.ytimg.com/vi/TyyiL30Ro1g/hqdefault.jpg" alt="">
-          <div class="t">TyyiL30Ro1g</div>
-        </button>
-        
-        <button class="item" onclick="play('Sa12Z0XVOko', `Sa12Z0XVOko`)">
-          <img src="https://i.ytimg.com/vi/Sa12Z0XVOko/hqdefault.jpg" alt="">
-          <div class="t">Sa12Z0XVOko</div>
-        </button>
-        
-        <button class="item" onclick="play('egRl2iWVpBM', `egRl2iWVpBM`)">
-          <img src="https://i.ytimg.com/vi/egRl2iWVpBM/hqdefault.jpg" alt="">
-          <div class="t">egRl2iWVpBM</div>
-        </button>
-        
-        <button class="item" onclick="play('CfEMqYVU0WE', `CfEMqYVU0WE`)">
-          <img src="https://i.ytimg.com/vi/CfEMqYVU0WE/hqdefault.jpg" alt="">
-          <div class="t">CfEMqYVU0WE</div>
-        </button>
-        
-        <button class="item" onclick="play('MTWuxl8s77k', `MTWuxl8s77k`)">
-          <img src="https://i.ytimg.com/vi/MTWuxl8s77k/hqdefault.jpg" alt="">
-          <div class="t">MTWuxl8s77k</div>
-        </button>
-        
-        <button class="item" onclick="play('QFrB3pYsy48', `QFrB3pYsy48`)">
-          <img src="https://i.ytimg.com/vi/QFrB3pYsy48/hqdefault.jpg" alt="">
-          <div class="t">QFrB3pYsy48</div>
-        </button>
-        
-        <button class="item" onclick="play('vhkXX6ptSM0', `vhkXX6ptSM0`)">
-          <img src="https://i.ytimg.com/vi/vhkXX6ptSM0/hqdefault.jpg" alt="">
-          <div class="t">vhkXX6ptSM0</div>
-        </button>
-        
-        <button class="item" onclick="play('r-24gQd_vCo', `r-24gQd_vCo`)">
-          <img src="https://i.ytimg.com/vi/r-24gQd_vCo/hqdefault.jpg" alt="">
-          <div class="t">r-24gQd_vCo</div>
-        </button>
-        
-        <button class="item" onclick="play('uyjJ77G2R3w', `uyjJ77G2R3w`)">
-          <img src="https://i.ytimg.com/vi/uyjJ77G2R3w/hqdefault.jpg" alt="">
-          <div class="t">uyjJ77G2R3w</div>
-        </button>
-        
-        <button class="item" onclick="play('MPM24ts0MJs', `MPM24ts0MJs`)">
-          <img src="https://i.ytimg.com/vi/MPM24ts0MJs/hqdefault.jpg" alt="">
-          <div class="t">MPM24ts0MJs</div>
-        </button>
-        
-        <button class="item" onclick="play('Yvrf7z2yX94', `Yvrf7z2yX94`)">
-          <img src="https://i.ytimg.com/vi/Yvrf7z2yX94/hqdefault.jpg" alt="">
-          <div class="t">Yvrf7z2yX94</div>
-        </button>
-        
-        <button class="item" onclick="play('QxedhE5X6dM', `QxedhE5X6dM`)">
-          <img src="https://i.ytimg.com/vi/QxedhE5X6dM/hqdefault.jpg" alt="">
-          <div class="t">QxedhE5X6dM</div>
-        </button>
-        
-        <button class="item" onclick="play('oCJlvJtJq-I', `oCJlvJtJq-I`)">
-          <img src="https://i.ytimg.com/vi/oCJlvJtJq-I/hqdefault.jpg" alt="">
-          <div class="t">oCJlvJtJq-I</div>
-        </button>
-        
-        <button class="item" onclick="play('jFnHy517OFk', `jFnHy517OFk`)">
-          <img src="https://i.ytimg.com/vi/jFnHy517OFk/hqdefault.jpg" alt="">
-          <div class="t">jFnHy517OFk</div>
-        </button>
-        
-        <button class="item" onclick="play('KBrurSPXLYo', `KBrurSPXLYo`)">
-          <img src="https://i.ytimg.com/vi/KBrurSPXLYo/hqdefault.jpg" alt="">
-          <div class="t">KBrurSPXLYo</div>
-        </button>
-        
-        <button class="item" onclick="play('27iwp_gN7Sg', `27iwp_gN7Sg`)">
-          <img src="https://i.ytimg.com/vi/27iwp_gN7Sg/hqdefault.jpg" alt="">
-          <div class="t">27iwp_gN7Sg</div>
-        </button>
-        
-        <button class="item" onclick="play('Igu2IbyRKCg', `Igu2IbyRKCg`)">
-          <img src="https://i.ytimg.com/vi/Igu2IbyRKCg/hqdefault.jpg" alt="">
-          <div class="t">Igu2IbyRKCg</div>
-        </button>
-        
-        <button class="item" onclick="play('5szL43Iq_mY', `5szL43Iq_mY`)">
-          <img src="https://i.ytimg.com/vi/5szL43Iq_mY/hqdefault.jpg" alt="">
-          <div class="t">5szL43Iq_mY</div>
-        </button>
-        
-        <button class="item" onclick="play('qQzsZJhq8Dw', `qQzsZJhq8Dw`)">
-          <img src="https://i.ytimg.com/vi/qQzsZJhq8Dw/hqdefault.jpg" alt="">
-          <div class="t">qQzsZJhq8Dw</div>
-        </button>
-        
-        <button class="item" onclick="play('Jy7IYWphP1Y', `Jy7IYWphP1Y`)">
-          <img src="https://i.ytimg.com/vi/Jy7IYWphP1Y/hqdefault.jpg" alt="">
-          <div class="t">Jy7IYWphP1Y</div>
-        </button>
-        
-        <button class="item" onclick="play('PWMJS977lFs', `PWMJS977lFs`)">
-          <img src="https://i.ytimg.com/vi/PWMJS977lFs/hqdefault.jpg" alt="">
-          <div class="t">PWMJS977lFs</div>
-        </button>
-        
-        <button class="item" onclick="play('br7jAGbYoVk', `br7jAGbYoVk`)">
-          <img src="https://i.ytimg.com/vi/br7jAGbYoVk/hqdefault.jpg" alt="">
-          <div class="t">br7jAGbYoVk</div>
-        </button>
-        
-        <button class="item" onclick="play('2HPivVvKs2U', `2HPivVvKs2U`)">
-          <img src="https://i.ytimg.com/vi/2HPivVvKs2U/hqdefault.jpg" alt="">
-          <div class="t">2HPivVvKs2U</div>
-        </button>
-        
-        <button class="item" onclick="play('RyvU4FtKvZ0', `RyvU4FtKvZ0`)">
-          <img src="https://i.ytimg.com/vi/RyvU4FtKvZ0/hqdefault.jpg" alt="">
-          <div class="t">RyvU4FtKvZ0</div>
-        </button>
-        
-        <button class="item" onclick="play('Ub8McSwqvBw', `Ub8McSwqvBw`)">
-          <img src="https://i.ytimg.com/vi/Ub8McSwqvBw/hqdefault.jpg" alt="">
-          <div class="t">Ub8McSwqvBw</div>
-        </button>
-        
-        <button class="item" onclick="play('OVIjCR3qdgY', `OVIjCR3qdgY`)">
-          <img src="https://i.ytimg.com/vi/OVIjCR3qdgY/hqdefault.jpg" alt="">
-          <div class="t">OVIjCR3qdgY</div>
-        </button>
-        
-        <button class="item" onclick="play('GpC_2O-2218', `GpC_2O-2218`)">
-          <img src="https://i.ytimg.com/vi/GpC_2O-2218/hqdefault.jpg" alt="">
-          <div class="t">GpC_2O-2218</div>
-        </button>
-        
-        <button class="item" onclick="play('W8_g7uZJRyo', `W8_g7uZJRyo`)">
-          <img src="https://i.ytimg.com/vi/W8_g7uZJRyo/hqdefault.jpg" alt="">
-          <div class="t">W8_g7uZJRyo</div>
-        </button>
-        
-        <button class="item" onclick="play('vEYSzPgww0o', `vEYSzPgww0o`)">
-          <img src="https://i.ytimg.com/vi/vEYSzPgww0o/hqdefault.jpg" alt="">
-          <div class="t">vEYSzPgww0o</div>
-        </button>
-        
-        <button class="item" onclick="play('rLY2KmXrNGc', `rLY2KmXrNGc`)">
-          <img src="https://i.ytimg.com/vi/rLY2KmXrNGc/hqdefault.jpg" alt="">
-          <div class="t">rLY2KmXrNGc</div>
-        </button>
-        
-        <button class="item" onclick="play('prLBN1LwZaM', `prLBN1LwZaM`)">
-          <img src="https://i.ytimg.com/vi/prLBN1LwZaM/hqdefault.jpg" alt="">
-          <div class="t">prLBN1LwZaM</div>
-        </button>
-        
-        <button class="item" onclick="play('5Q9pOjIJTtc', `5Q9pOjIJTtc`)">
-          <img src="https://i.ytimg.com/vi/5Q9pOjIJTtc/hqdefault.jpg" alt="">
-          <div class="t">5Q9pOjIJTtc</div>
-        </button>
-        
-        <button class="item" onclick="play('su07y_fTnNo', `su07y_fTnNo`)">
-          <img src="https://i.ytimg.com/vi/su07y_fTnNo/hqdefault.jpg" alt="">
-          <div class="t">su07y_fTnNo</div>
-        </button>
-        
-        <button class="item" onclick="play('lY6YzM-9fZk', `lY6YzM-9fZk`)">
-          <img src="https://i.ytimg.com/vi/lY6YzM-9fZk/hqdefault.jpg" alt="">
-          <div class="t">lY6YzM-9fZk</div>
-        </button>
-        
-        <button class="item" onclick="play('-W-LbzHaaJQ', `-W-LbzHaaJQ`)">
-          <img src="https://i.ytimg.com/vi/-W-LbzHaaJQ/hqdefault.jpg" alt="">
-          <div class="t">-W-LbzHaaJQ</div>
-        </button>
-        
-        <button class="item" onclick="play('2lX4_FqSkNA', `2lX4_FqSkNA`)">
-          <img src="https://i.ytimg.com/vi/2lX4_FqSkNA/hqdefault.jpg" alt="">
-          <div class="t">2lX4_FqSkNA</div>
-        </button>
-        
-        <button class="item" onclick="play('LhRAkRo4QY4', `LhRAkRo4QY4`)">
-          <img src="https://i.ytimg.com/vi/LhRAkRo4QY4/hqdefault.jpg" alt="">
-          <div class="t">LhRAkRo4QY4</div>
-        </button>
-        
-        <button class="item" onclick="play('oRkZdNO4lyc', `oRkZdNO4lyc`)">
-          <img src="https://i.ytimg.com/vi/oRkZdNO4lyc/hqdefault.jpg" alt="">
-          <div class="t">oRkZdNO4lyc</div>
-        </button>
-        
-        <button class="item" onclick="play('RcMZ9aZOsjo', `RcMZ9aZOsjo`)">
-          <img src="https://i.ytimg.com/vi/RcMZ9aZOsjo/hqdefault.jpg" alt="">
-          <div class="t">RcMZ9aZOsjo</div>
-        </button>
-        
-        <button class="item" onclick="play('NiLcpyddMPA', `NiLcpyddMPA`)">
-          <img src="https://i.ytimg.com/vi/NiLcpyddMPA/hqdefault.jpg" alt="">
-          <div class="t">NiLcpyddMPA</div>
-        </button>
-        
-        <button class="item" onclick="play('Z0B3799mTLc', `Z0B3799mTLc`)">
-          <img src="https://i.ytimg.com/vi/Z0B3799mTLc/hqdefault.jpg" alt="">
-          <div class="t">Z0B3799mTLc</div>
-        </button>
-        
-        <button class="item" onclick="play('tkMUqca-BZs', `tkMUqca-BZs`)">
-          <img src="https://i.ytimg.com/vi/tkMUqca-BZs/hqdefault.jpg" alt="">
-          <div class="t">tkMUqca-BZs</div>
-        </button>
-        
-        <button class="item" onclick="play('tSG9ur1Kh-U', `tSG9ur1Kh-U`)">
-          <img src="https://i.ytimg.com/vi/tSG9ur1Kh-U/hqdefault.jpg" alt="">
-          <div class="t">tSG9ur1Kh-U</div>
-        </button>
-        
-        <button class="item" onclick="play('i636jsSlVbc', `i636jsSlVbc`)">
-          <img src="https://i.ytimg.com/vi/i636jsSlVbc/hqdefault.jpg" alt="">
-          <div class="t">i636jsSlVbc</div>
-        </button>
-        
-        <button class="item" onclick="play('wgwB4i333hs', `wgwB4i333hs`)">
-          <img src="https://i.ytimg.com/vi/wgwB4i333hs/hqdefault.jpg" alt="">
-          <div class="t">wgwB4i333hs</div>
-        </button>
-        
-        <button class="item" onclick="play('Wy31LWPBOUw', `Wy31LWPBOUw`)">
-          <img src="https://i.ytimg.com/vi/Wy31LWPBOUw/hqdefault.jpg" alt="">
-          <div class="t">Wy31LWPBOUw</div>
-        </button>
-        
-        <button class="item" onclick="play('iBOdHr3hxms', `iBOdHr3hxms`)">
-          <img src="https://i.ytimg.com/vi/iBOdHr3hxms/hqdefault.jpg" alt="">
-          <div class="t">iBOdHr3hxms</div>
-        </button>
-        
-        <button class="item" onclick="play('gFGTmpuLyzg', `gFGTmpuLyzg`)">
-          <img src="https://i.ytimg.com/vi/gFGTmpuLyzg/hqdefault.jpg" alt="">
-          <div class="t">gFGTmpuLyzg</div>
-        </button>
-        
-        <button class="item" onclick="play('ePAW33_JPuY', `ePAW33_JPuY`)">
-          <img src="https://i.ytimg.com/vi/ePAW33_JPuY/hqdefault.jpg" alt="">
-          <div class="t">ePAW33_JPuY</div>
-        </button>
-        
-        <button class="item" onclick="play('g6mFhbO31EM', `g6mFhbO31EM`)">
-          <img src="https://i.ytimg.com/vi/g6mFhbO31EM/hqdefault.jpg" alt="">
-          <div class="t">g6mFhbO31EM</div>
-        </button>
-        
-        <button class="item" onclick="play('cmfcRuRcLh0', `cmfcRuRcLh0`)">
-          <img src="https://i.ytimg.com/vi/cmfcRuRcLh0/hqdefault.jpg" alt="">
-          <div class="t">cmfcRuRcLh0</div>
-        </button>
-        
-  </div>
-  <div class="player">
-    <div class="now" id="now">Pick a video</div>
-    <iframe id="frame" allow="autoplay; encrypted-media" referrerpolicy="origin"></iframe>
-    <div class="small">Lock this with iPad <b>Guided Access</b>.</div>
-  </div>
+
+<header>KidEdu – Approved Only (No search · No suggestions · No autoplay)</header>
+
+<div id="grid"></div>
+
+<div id="player">
+  <button id="closeBtn">✕ Close</button>
+  <iframe id="yt"></iframe>
 </div>
+
 <script>
-function play(vid, title) {
-  document.getElementById('now').textContent = title;
-  document.getElementById('frame').src =
-    `https://www.youtube-nocookie.com/embed/${vid}?rel=0&modestbranding=1&iv_load_policy=3&playsinline=1`;
+/* -------------------------------
+   CONFIG
+--------------------------------*/
+const DISPLAY_LIMIT = 100;
+
+/* -------------------------------
+   HARD CACHE-BUSTER SEED
+--------------------------------*/
+const PAGE_SEED = Date.now() + Math.random();
+
+/* -------------------------------
+   SEEDED SHUFFLE (iOS SAFE)
+--------------------------------*/
+function seededShuffle(array, seed) {
+  let m = array.length, t, i;
+  function rand() {
+    const x = Math.sin(seed++) * 10000;
+    return x - Math.floor(x);
+  }
+  while (m) {
+    i = Math.floor(rand() * m--);
+    t = array[m];
+    array[m] = array[i];
+    array[i] = t;
+  }
 }
+
+/* -------------------------------
+   LOAD CATALOG
+--------------------------------*/
+fetch("approved_catalog.json?ts=" + PAGE_SEED)
+  .then(r => r.json())
+  .then(allVideos => {
+    console.log("Full catalog size:", allVideos.length);
+
+    // shuffle full catalog
+    seededShuffle(allVideos, PAGE_SEED);
+
+    // take slice for display only
+    const visible = allVideos.slice(0, DISPLAY_LIMIT);
+
+    console.log("Displaying:", visible.length);
+
+    const grid = document.getElementById("grid");
+
+    visible.forEach(v => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <img src="https://i.ytimg.com/vi/${v.video_id}/hqdefault.jpg">
+        <div>${v.title}</div>
+      `;
+      card.onclick = () => play(v.video_id);
+      grid.appendChild(card);
+    });
+  });
+
+/* -------------------------------
+   PLAYER
+--------------------------------*/
+function play(id) {
+  const iframe = document.getElementById("yt");
+  iframe.src =
+    "https://www.youtube.com/embed/" + id +
+    "?autoplay=1&rel=0&modestbranding=1&controls=1";
+
+  document.getElementById("player").style.display = "block";
+}
+
+document.getElementById("closeBtn").onclick = () => {
+  const iframe = document.getElementById("yt");
+  iframe.src = "";
+  document.getElementById("player").style.display = "none";
+};
 </script>
+
 </body>
 </html>
