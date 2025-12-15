@@ -11,10 +11,8 @@
   header button { background:#1f2a44; color:#e6e9ef; border:1px solid #2f3b5f; padding:8px 10px; border-radius:10px; font-weight:700; }
   header .meta { color:#9aa4bf; font-size:13px; font-weight:600; }
 
-  /* Main stage (full screen player area) */
   #stage { position: fixed; inset: 48px 0 0 0; background:#000; }
 
-  /* Drawer menu */
   #drawer {
     position: fixed;
     top: 48px;
@@ -27,36 +25,18 @@
     transition: transform 160ms ease;
     z-index: 999;
     overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
   }
   #drawer.open { transform: translateX(0); }
 
   .grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; padding:12px; }
-  .card {
-    background:#111a2e;
-    border:1px solid #1f2a44;
-    border-radius:12px;
-    overflow:hidden;
-    cursor:pointer;
-  }
+  .card { background:#111a2e; border:1px solid #1f2a44; border-radius:12px; overflow:hidden; cursor:pointer; }
   .card img { width:100%; display:block; }
-  .card .t { padding:8px; font-size:13px; line-height:1.2; color:#e6e9ef; }
+  .card .t { padding:8px; font-size:13px; line-height:1.2; }
 
-  /* Tap-to-open edge (for iPad, instead of hover) */
-  #edge {
-    position: fixed;
-    top: 48px;
-    left: 0;
-    bottom: 0;
-    width: 12px;
-    z-index: 998;
-    background: transparent;
-  }
+  #edge { position: fixed; top: 48px; left: 0; bottom: 0; width: 12px; z-index: 998; }
 
-  /* Player iframe */
   iframe { width:100%; height:100%; border:none; display:block; }
 
-  /* Overlay when no video playing */
   #overlay {
     position:absolute; inset:0;
     display:flex; align-items:center; justify-content:center;
@@ -64,8 +44,7 @@
     background:#000;
   }
 
-  /* Block accidental text selection */
-  * { -webkit-user-select: none; user-select: none; }
+  * { -webkit-user-select:none; user-select:none; }
 </style>
 </head>
 
@@ -87,111 +66,105 @@
   <div id="player"></div>
 </div>
 
+<script src="https://www.youtube.com/iframe_api"></script>
 <script>
-const DISPLAY_LIMIT = 20;                 // <- you wanted 20
+const DISPLAY_LIMIT = 20;
+const KICKBACK_SECONDS = 3;
 const CATALOG_URL = "approved_catalog.json";
-const seed = Date.now() + Math.random();  // cache buster + shuffle variation
 
 let CATALOG = [];
-let CURRENT = null;
+let PLAYER = null;
+let WATCHDOG = null;
 
-function shuffle(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
+    [a[i], a[j]] = [a[j], a[i]];
   }
 }
 
-async function loadCatalog() {
-  const res = await fetch(CATALOG_URL + "?ts=" + encodeURIComponent(seed), { cache: "no-store" });
-  if (!res.ok) throw new Error("HTTP " + res.status);
-  const data = await res.json();
-  if (!Array.isArray(data)) throw new Error("approved_catalog.json must be a JSON array");
-  CATALOG = data.filter(x => x && typeof x.video_id === "string" && x.video_id.length === 11);
+function openDrawer(v) {
+  document.getElementById("drawer").classList.toggle("open", !!v);
 }
 
-function openDrawer(open) {
-  document.getElementById("drawer").classList.toggle("open", !!open);
+function stopAndReturn() {
+  if (WATCHDOG) clearInterval(WATCHDOG);
+  WATCHDOG = null;
+  PLAYER = null;
+  document.getElementById("player").innerHTML = "";
+  document.getElementById("overlay").style.display = "flex";
+  openDrawer(true);
+}
+
+function playVideo(id) {
+  document.getElementById("overlay").style.display = "none";
+  openDrawer(false);
+  document.getElementById("player").innerHTML = `<div id="ytplayer"></div>`;
+
+  PLAYER = new YT.Player("ytplayer", {
+    videoId: id,
+    host: "https://www.youtube-nocookie.com",
+    playerVars: {
+      rel: 0,
+      modestbranding: 1,
+      playsinline: 1,
+      controls: 1
+    },
+    events: {
+      onStateChange: (e) => {
+        if (e.data === YT.PlayerState.ENDED) {
+          stopAndReturn();
+          return;
+        }
+
+        if (e.data === YT.PlayerState.PLAYING) {
+          if (WATCHDOG) clearInterval(WATCHDOG);
+          WATCHDOG = setInterval(() => {
+            try {
+              const d = PLAYER.getDuration();
+              const t = PLAYER.getCurrentTime();
+              if (d && (d - t) <= KICKBACK_SECONDS) {
+                stopAndReturn();
+              }
+            } catch {}
+          }, 300);
+        }
+      }
+    }
+  });
 }
 
 function renderMix() {
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
-
-  const items = CATALOG.slice();
-  shuffle(items);
-  const pick = items.slice(0, DISPLAY_LIMIT);
+  const list = [...CATALOG];
+  shuffle(list);
+  const pick = list.slice(0, DISPLAY_LIMIT);
 
   for (const v of pick) {
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `
-      <img src="${v.thumb || ("https://i.ytimg.com/vi/" + v.video_id + "/hqdefault.jpg")}" />
-      <div class="t">${(v.title || v.video_id).replace(/</g,"&lt;")}</div>
-    `;
-    card.onclick = () => playVideo(v.video_id);
-    grid.appendChild(card);
+    const c = document.createElement("div");
+    c.className = "card";
+    c.innerHTML = `<img src="${v.thumb}"><div class="t">${v.title}</div>`;
+    c.onclick = () => playVideo(v.video_id);
+    grid.appendChild(c);
   }
 
   document.getElementById("meta").textContent =
-    `Catalog: ${CATALOG.length.toLocaleString()} · Showing: ${pick.length} · Tap edge or ☰`;
+    `Catalog: ${CATALOG.length.toLocaleString()} · Showing ${DISPLAY_LIMIT}`;
 }
 
-function stopAndReturnToMenu() {
-  // Hard reset: removes any end-screen temptations
-  document.getElementById("player").innerHTML = "";
-  document.getElementById("overlay").style.display = "flex";
-  CURRENT = null;
+async function init() {
+  const r = await fetch(CATALOG_URL + "?t=" + Date.now(), { cache:"no-store" });
+  CATALOG = (await r.json()).filter(v => v.video_id?.length === 11);
+  renderMix();
   openDrawer(true);
 }
 
-function playVideo(videoId) {
-  CURRENT = videoId;
-  document.getElementById("overlay").style.display = "none";
-  openDrawer(false);
-
-  // NOTE: We cannot fully remove YouTube end cards,
-  // but we CAN force-kick back by timing + easy exit.
-  // Most kid behavior is solved by removing the player when it ends.
-  // We’ll use a lightweight approach:
-  // - Show video normally
-  // - Provide a simple “back to menu” via drawer button/edge
-  // - Optional: YouTube JS API can detect ended later if you want
-
-  document.getElementById("player").innerHTML = `
-    <iframe
-      src="https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1&controls=1"
-      allow="autoplay; encrypted-media"
-      allowfullscreen>
-    </iframe>
-  `;
-}
-
-// UI wiring
 document.getElementById("btnDrawer").onclick = () => openDrawer(true);
 document.getElementById("btnNew").onclick = () => renderMix();
 document.getElementById("edge").onclick = () => openDrawer(true);
 
-// If drawer opens while a video is playing, you can choose another instantly.
-// (This is your “YouTube dropdown of recent vids” but controlled.)
-document.getElementById("drawer").addEventListener("click", (e) => {
-  // tapping background doesn't close; only selecting a card plays and closes
-});
-
-// Start
-(async () => {
-  try {
-    await loadCatalog();
-    renderMix();
-    openDrawer(true);
-  } catch (e) {
-    document.getElementById("meta").textContent = "Catalog load failed";
-    document.getElementById("grid").innerHTML =
-      `<div style="padding:12px;color:#ffb4b4;white-space:pre-wrap">Failed: ${String(e)}\n\nMake sure approved_catalog.json is in repo root.</div>`;
-    openDrawer(true);
-  }
-})();
+init();
 </script>
-
 </body>
 </html>
