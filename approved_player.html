@@ -37,11 +37,46 @@
 
   iframe { width:100%; height:100%; border:none; display:block; }
 
-  #overlay {
+  /* ===============================
+     OVERLAY (blank state) + BG IMAGE
+     - Put your image at: assets/bg/Spgraphic.jpg
+     - If your extension differs, update the URL below.
+     =============================== */
+  #overlay{
     position:absolute; inset:0;
     display:flex; align-items:center; justify-content:center;
     color:#9aa4bf; font-weight:700; font-size:18px;
     background:#000;
+    overflow:hidden;
+  }
+
+  /* dim faded background image */
+  #overlay::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background: url("assets/bg/Spgraphic.jpg") center/cover no-repeat;
+    opacity: 0.20;              /* dim/faded */
+    filter: blur(1px);          /* subtle softness */
+    transform: scale(1.02);     /* prevent edge gaps from blur */
+    pointer-events:none;
+  }
+
+  /* dark overlay + vignette for readability */
+  #overlay::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(circle at 50% 35%, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.85) 70%),
+      linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.75));
+    pointer-events:none;
+  }
+
+  /* keep overlay text above layers */
+  #overlay > *{
+    position:relative;
+    z-index:1;
   }
 
   * { -webkit-user-select:none; user-select:none; }
