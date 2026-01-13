@@ -63,26 +63,26 @@
     z-index: 2;
   }
 
-  /* dim faded background image */
+  /* background image (more visible) */
   #overlay::before{
     content:"";
     position:absolute;
     inset:0;
     background: url("assets/bg/Spgraphic.jpg") center/cover no-repeat;
-    opacity: 0.20;              /* dim/faded */
-    filter: blur(1px);          /* subtle softness */
-    transform: scale(1.02);     /* prevent edge gaps from blur */
+    opacity: 0.45;              /* ↑ more visible */
+    filter: blur(0.35px);       /* ↓ less blur = sharper */
+    transform: scale(1.02);
     pointer-events:none;
   }
 
-  /* dark overlay + vignette for readability */
+  /* lighter dark overlay + vignette (lets image show more) */
   #overlay::after{
     content:"";
     position:absolute;
     inset:0;
     background:
-      radial-gradient(circle at 50% 35%, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.85) 70%),
-      linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.75));
+      radial-gradient(circle at 50% 35%, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.55) 70%),
+      linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.45));
     pointer-events:none;
   }
 
