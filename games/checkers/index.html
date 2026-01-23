@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>KidEdu Checkers</title>
+  <link rel="stylesheet" href="checkers.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="title">Checkers</div>
+      <button class="pill" id="btnNew">New game</button>
+      <select class="pill" id="difficulty" aria-label="Difficulty">
+        <option value="easy">Easy 🙂</option>
+        <option value="med" selected>Medium 🤔</option>
+        <option value="hard">Hard 😈</option>
+      </select>
+      <div class="note" id="scoreline">—</div>
+    </div>
+
+    <div class="main">
+      <div class="boardWrap">
+        <div class="board" id="board" aria-label="Checkers board"></div>
+      </div>
+
+      <div class="side">
+        <div class="status" id="status">—</div>
+        <div class="hint" id="hint">—</div>
+        <div class="log" id="log"></div>
+        <div class="hint">Rules: captures are mandatory. Kings show a ★.</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="checkers.js"></script>
+</body>
+</html>

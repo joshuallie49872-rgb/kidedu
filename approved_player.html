@@ -93,6 +93,42 @@
   }
 
   * { -webkit-user-select:none; user-select:none; }
+
+  /* Checkers modal */
+  #checkersModal { position: fixed; inset: 0; display: none; z-index: 2000; }
+  #checkersModal.open { display: block; }
+  #checkersModal .ck_backdrop { position:absolute; inset:0; background: rgba(0,0,0,.65); }
+  #checkersModal .ck_panel {
+    position:absolute; inset: 16px;
+    background:#0f172a;
+    border:1px solid #1f2a44;
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow: 0 20px 80px rgba(0,0,0,.45);
+    display:flex; flex-direction:column;
+  }
+  #checkersModal .ck_topbar{
+    display:flex; align-items:center; gap:10px;
+    padding:10px 12px;
+    background:#111a2e;
+    border-bottom:1px solid #1f2a44;
+    font-weight:800;
+  }
+  #checkersModal .ck_title{ font-size:16px; }
+  #checkersModal .ck_select{
+    margin-left:auto;
+    background:#1f2a44; color:#e6e9ef;
+    border:1px solid #2f3b5f;
+    padding:8px 10px; border-radius:10px; font-weight:800;
+  }
+  #checkersModal .ck_close{
+    background:#1f2a44; color:#e6e9ef;
+    border:1px solid #2f3b5f;
+    padding:8px 10px; border-radius:10px; font-weight:900;
+    cursor:pointer;
+  }
+  #checkersModal .ck_frame{ width:100%; height:100%; border:0; background:#000; }
+
 </style>
 </head>
 
@@ -100,6 +136,7 @@
 <header>
   <button id="btnDrawer">☰ Videos</button>
   <button id="btnNew">New mix</button>
+  <button id="btnCheckers">Checkers</button>
   <div class="meta" id="meta">Loading…</div>
 </header>
 
@@ -113,6 +150,24 @@
   <div id="overlay">Pick a video</div>
   <div id="player"></div>
 </div>
+
+
+<div id="checkersModal" aria-hidden="true">
+  <div class="ck_backdrop" data-close="1"></div>
+  <div class="ck_panel">
+    <div class="ck_topbar">
+      <div class="ck_title">Checkers</div>
+      <select id="ckDiff" class="ck_select" title="Bot difficulty">
+        <option value="easy">Easy 🙂</option>
+        <option value="med" selected>Medium 🤔</option>
+        <option value="hard">Hard 😈</option>
+      </select>
+      <button id="ckClose" class="ck_close" title="Close">✕</button>
+    </div>
+    <iframe id="ckFrame" class="ck_frame" src="" loading="lazy"></iframe>
+  </div>
+</div>
+
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
@@ -213,6 +268,35 @@ async function init() {
 document.getElementById("btnDrawer").onclick = () => openDrawer(true);
 document.getElementById("btnNew").onclick = () => renderMix();
 document.getElementById("edge").onclick = () => openDrawer(true);
+
+
+// --- Checkers (KidEdu) ---
+(function(){
+  const btn = document.getElementById("btnCheckers");
+  const modal = document.getElementById("checkersModal");
+  const closeBtn = document.getElementById("ckClose");
+  const diffSel = document.getElementById("ckDiff");
+  const frame = document.getElementById("ckFrame");
+
+  function openCheckers(){
+    const diff = diffSel.value || "med";
+    frame.src = `games/checkers/index.html?bot=${encodeURIComponent(diff)}`;
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden","false");
+  }
+  function closeCheckers(){
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden","true");
+    frame.src = ""; // stop timers
+  }
+
+  if(btn) btn.addEventListener("click", openCheckers);
+  if(closeBtn) closeBtn.addEventListener("click", closeCheckers);
+  if(modal) modal.addEventListener("click", (e)=>{ if(e.target?.dataset?.close) closeCheckers(); });
+  window.addEventListener("keydown", (e)=>{ if(e.key==="Escape" && modal?.classList.contains("open")) closeCheckers(); });
+  if(diffSel) diffSel.addEventListener("change", ()=>{ if(modal?.classList.contains("open")) openCheckers(); });
+})();
+
 
 init();
 </script>
