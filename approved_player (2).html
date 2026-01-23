@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>KidEdu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<style>
+  body { margin:0; font-family: system-ui,-apple-system,BlinkMacSystemFont,sans-serif; background:#0b1220; color:#e6e9ef; }
+  header { padding:12px; background:#111a2e; font-size:18px; font-weight:700; display:flex; align-items:center; gap:10px; }
+  header button { background:#1f2a44; color:#e6e9ef; border:1px solid #2f3b5f; padding:8px 10px; border-radius:10px; font-weight:700; }
+  header .meta { color:#9aa4bf; font-size:13px; font-weight:600; }
+
+  #stage { position: fixed; inset: 48px 0 0 0; background:#000; }
+
+  #drawer {
+    position: fixed;
+    top: 48px;
+    left: 0;
+    bottom: 0;
+    width: min(420px, 85vw);
+    background:#0f172a;
+    border-right:1px solid #1f2a44;
+    transform: translateX(-102%);
+    transition: transform 160ms ease;
+    z-index: 999;
+    overflow-y: auto;
+  }
+  #drawer.open { transform: translateX(0); }
+
+  .grid { display:grid; grid-template-columns: 1fr 1fr; gap:10px; padding:12px; }
+  .card { background:#111a2e; border:1px solid #1f2a44; border-radius:12px; overflow:hidden; cursor:pointer; }
+  .card img { width:100%; display:block; }
+  .card .t { padding:8px; font-size:13px; line-height:1.2; }
+
+  #edge { position: fixed; top: 48px; left: 0; bottom: 0; width: 12px; z-index: 998; }
+
+  /* IMPORTANT: make the player fill the entire stage */
+  #player{
+    position:absolute;
+    inset:0;
+  }
+  #ytplayer{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+  }
+
+  iframe { width:100%; height:100%; border:none; display:block; }
+
+  /* ===============================
+     OVERLAY (blank state) + BG IMAGE
+     - Put your image at: assets/bg/Spgraphic.jpg
+     - If your extension differs, update the URL below.
+     =============================== */
+  #overlay{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    color:#9aa4bf; font-weight:700; font-size:18px;
+    background:#000;
+    overflow:hidden;
+    z-index: 2;
+  }
+
+  /* background image (more visible) */
+  #overlay::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background: url("assets/bg/Spgraphic.jpg") center/cover no-repeat;
+    opacity: 0.45;              /* ↑ more visible */
+    filter: blur(0.35px);       /* ↓ less blur = sharper */
+    transform: scale(1.02);
+    pointer-events:none;
+  }
+
+  /* lighter dark overlay + vignette (lets image show more) */
+  #overlay::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(circle at 50% 35%, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.55) 70%),
+      linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.45));
+    pointer-events:none;
+  }
+
+  /* keep overlay text above layers */
+  #overlay > *{
+    position:relative;
+    z-index:1;
+  }
+
+  * { -webkit-user-select:none; user-select:none; }
+</style>
+</head>
+
+<body>
+<header>
+  <button id="btnDrawer">☰ Videos</button>
+  <button id="btnNew">New mix</button>
+  <div class="meta" id="meta">Loading…</div>
+</header>
+
+<div id="edge"></div>
+
+<div id="drawer">
+  <div class="grid" id="grid"></div>
+</div>
+
+<div id="stage">
+  <div id="overlay">Pick a video</div>
+  <div id="player"></div>
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+const DISPLAY_LIMIT = 20;
+const KICKBACK_SECONDS = 3;
+const CATALOG_URL = "approved_catalog.json";
+
+let CATALOG = [];
+let PLAYER = null;
+let WATCHDOG = null;
+
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+}
+
+function openDrawer(v) {
+  document.getElementById("drawer").classList.toggle("open", !!v);
+}
+
+function stopAndReturn() {
+  if (WATCHDOG) clearInterval(WATCHDOG);
+  WATCHDOG = null;
+  PLAYER = null;
+  document.getElementById("player").innerHTML = "";
+  document.getElementById("overlay").style.display = "flex";
+  openDrawer(true);
+}
+
+function playVideo(id) {
+  document.getElementById("overlay").style.display = "none";
+  openDrawer(false);
+
+  // IMPORTANT: ytplayer now fills stage via CSS (#player + #ytplayer)
+  document.getElementById("player").innerHTML = `<div id="ytplayer"></div>`;
+
+  PLAYER = new YT.Player("ytplayer", {
+    videoId: id,
+    host: "https://www.youtube-nocookie.com",
+    playerVars: {
+      rel: 0,
+      modestbranding: 1,
+      playsinline: 1,
+      controls: 1
+    },
+    events: {
+      onStateChange: (e) => {
+        if (e.data === YT.PlayerState.ENDED) {
+          stopAndReturn();
+          return;
+        }
+
+        if (e.data === YT.PlayerState.PLAYING) {
+          if (WATCHDOG) clearInterval(WATCHDOG);
+          WATCHDOG = setInterval(() => {
+            try {
+              const d = PLAYER.getDuration();
+              const t = PLAYER.getCurrentTime();
+              if (d && (d - t) <= KICKBACK_SECONDS) {
+                stopAndReturn();
+              }
+            } catch {}
+          }, 300);
+        }
+      }
+    }
+  });
+}
+
+function renderMix() {
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  const list = [...CATALOG];
+  shuffle(list);
+  const pick = list.slice(0, DISPLAY_LIMIT);
+
+  for (const v of pick) {
+    const c = document.createElement("div");
+    c.className = "card";
+    c.innerHTML = `<img src="${v.thumb}"><div class="t">${v.title}</div>`;
+    c.onclick = () => playVideo(v.video_id);
+    grid.appendChild(c);
+  }
+
+  document.getElementById("meta").textContent =
+    `Catalog: ${CATALOG.length.toLocaleString()} · Showing ${DISPLAY_LIMIT}`;
+}
+
+async function init() {
+  const r = await fetch(CATALOG_URL + "?t=" + Date.now(), { cache:"no-store" });
+  CATALOG = (await r.json()).filter(v => v.video_id?.length === 11);
+  renderMix();
+  openDrawer(true);
+}
+
+document.getElementById("btnDrawer").onclick = () => openDrawer(true);
+document.getElementById("btnNew").onclick = () => renderMix();
+document.getElementById("edge").onclick = () => openDrawer(true);
+
+init();
+</script>
+</body>
+</html>
