@@ -100,9 +100,12 @@
       grid-template-rows: repeat(8, 1fr);
       gap:6px;
       box-shadow: inset 0 0 0 1px rgba(0,0,0,.18);
+
+      /* iOS-friendly tap behavior */
       touch-action: manipulation;
       -webkit-user-select:none;
       user-select:none;
+      -webkit-touch-callout: none;
     }
 
     .sq{
@@ -112,6 +115,7 @@
       position:relative;
       cursor:pointer;
       background:transparent;
+      -webkit-tap-highlight-color: transparent;
     }
     .sq.light{ background: rgba(255,255,255,.12); }
     .sq.dark{ background: rgba(0,0,0,.08); }
@@ -132,6 +136,9 @@
       align-items:center;
       justify-content:center;
       font-weight:900;
+
+      /* IMPORTANT: allow taps to hit the square button reliably on iOS */
+      pointer-events: none;
     }
     .piece.red{ background: linear-gradient(180deg, #ff6a5a, var(--danger)); }
     .piece.blue{ background: linear-gradient(180deg, #58a6ff, var(--blue)); }
@@ -194,7 +201,7 @@
   </div>
 
   <script>
-  /* KidEdu Checkers — self-contained, mobile-safe */
+  /* KidEdu Checkers — self-contained, iOS-safe input */
   (() => {
     const $ = (id) => document.getElementById(id);
 
@@ -244,8 +251,32 @@
           boardEl.appendChild(sq);
         }
       }
-      boardEl.addEventListener("pointerdown", onBoardPointerDown, { passive:false });
-      boardEl.addEventListener("touchmove", (e)=>e.preventDefault(), { passive:false });
+
+      // iOS FIX: bind multiple event types so taps always register (especially in iframes)
+      const handler = (e) => {
+        if (busy) return;
+
+        const target = e.target.closest(".sq");
+        if (!target) return;
+
+        // prevent iOS click delay / scroll steals
+        if (e.cancelable) e.preventDefault();
+
+        const r = Number(target.dataset.r);
+        const c = Number(target.dataset.c);
+
+        if (turn !== R) return;
+        handleHumanTap(r, c);
+      };
+
+      // Pointer events (desktop/modern)
+      boardEl.addEventListener("pointerdown", handler, { passive:false });
+
+      // iOS Safari fallback
+      boardEl.addEventListener("touchstart", handler, { passive:false });
+
+      // Old fallback
+      boardEl.addEventListener("mousedown", handler, { passive:false });
     }
 
     function newGame(){
@@ -314,19 +345,6 @@
         sq.appendChild(p);
       }
       if(scoreEl) scoreEl.textContent = `Red: ${redCount}  Blue: ${blueCount}`;
-    }
-
-    function onBoardPointerDown(e){
-      if(busy) return;
-      const target = e.target.closest(".sq");
-      if(!target) return;
-      e.preventDefault();
-
-      const r = Number(target.dataset.r);
-      const c = Number(target.dataset.c);
-
-      if(turn !== R) return;
-      handleHumanTap(r,c);
     }
 
     function handleHumanTap(r,c){
@@ -404,7 +422,6 @@
       if(side===R || isKing) dirs.push([-1,-1],[-1,+1]);
       if(side===B || isKing) dirs.push([+1,-1],[+1,+1]);
 
-      // capture DFS
       const captures = [];
       function dfs(brd, cr, cc, pathCaps, pieceVal){
         let found=false;
@@ -543,7 +560,6 @@
       applyMove(board, best);
       logLine(`Blue: ${pos(best.fr,best.fc)} → ${pos(best.tr,best.tc)}${best.captures.length?" (capture)":""}`);
 
-      // chain captures
       if(best.captures.length){
         let cr=best.tr, cc=best.tc;
         while(true){
@@ -581,7 +597,6 @@
     btnNew && btnNew.addEventListener("click", newGame);
     difficultySel && difficultySel.addEventListener("change", ()=>logLine(`Bot difficulty: ${difficultySel.value}`));
 
-    // boot
     if(!boardEl) return;
     buildBoardDOM();
     newGame();
