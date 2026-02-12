@@ -8,7 +8,7 @@
 <style>
   body { margin:0; font-family: system-ui,-apple-system,BlinkMacSystemFont,sans-serif; background:#0b1220; color:#e6e9ef; }
   header { padding:12px; background:#111a2e; font-size:18px; font-weight:700; display:flex; align-items:center; gap:10px; }
-  header button { background:#1f2a44; color:#e6e9ef; border:1px solid #2f3b5f; padding:8px 10px; border-radius:10px; font-weight:700; }
+  header button { background:#1f2a44; color:#e6e9ef; border:1px solid #2f3b5f; padding:8px 10px; border-radius:10px; font-weight:700; cursor:pointer; }
   header .meta { color:#9aa4bf; font-size:13px; font-weight:600; }
 
   #stage { position: fixed; inset: 48px 0 0 0; background:#000; }
@@ -36,23 +36,14 @@
   #edge { position: fixed; top: 48px; left: 0; bottom: 0; width: 12px; z-index: 998; }
 
   /* IMPORTANT: make the player fill the entire stage */
-  #player{
-    position:absolute;
-    inset:0;
-  }
-  #ytplayer{
-    position:absolute;
-    inset:0;
-    width:100%;
-    height:100%;
-  }
+  #player{ position:absolute; inset:0; }
+  #ytplayer{ position:absolute; inset:0; width:100%; height:100%; }
 
   iframe { width:100%; height:100%; border:none; display:block; }
 
   /* ===============================
      OVERLAY (blank state) + BG IMAGE
      - Put your image at: assets/bg/Spgraphic.jpg
-     - If your extension differs, update the URL below.
      =============================== */
   #overlay{
     position:absolute; inset:0;
@@ -69,8 +60,8 @@
     position:absolute;
     inset:0;
     background: url("assets/bg/Spgraphic.jpg") center/cover no-repeat;
-    opacity: 0.45;              /* ↑ more visible */
-    filter: blur(0.35px);       /* ↓ less blur = sharper */
+    opacity: 0.45;
+    filter: blur(0.35px);
     transform: scale(1.02);
     pointer-events:none;
   }
@@ -87,12 +78,12 @@
   }
 
   /* keep overlay text above layers */
-  #overlay > *{
-    position:relative;
-    z-index:1;
-  }
+  #overlay > *{ position:relative; z-index:1; }
 
   * { -webkit-user-select:none; user-select:none; }
+
+  /* When a modal is open, prevent background scroll on mobile */
+  body.modalOpen{ overflow:hidden; }
 
   /* Checkers modal */
   #checkersModal { position: fixed; inset: 0; display: none; z-index: 2000; }
@@ -120,6 +111,7 @@
     background:#1f2a44; color:#e6e9ef;
     border:1px solid #2f3b5f;
     padding:8px 10px; border-radius:10px; font-weight:800;
+    cursor:pointer;
   }
   #checkersModal .ck_close{
     background:#1f2a44; color:#e6e9ef;
@@ -129,6 +121,49 @@
   }
   #checkersModal .ck_frame{ width:100%; height:100%; border:0; background:#000; }
 
+  /* Mancala modal */
+  #mancalaModal { position: fixed; inset: 0; display: none; z-index: 2001; }
+  #mancalaModal.open { display: block; }
+  #mancalaModal .mn_backdrop { position:absolute; inset:0; background: rgba(0,0,0,.65); }
+  #mancalaModal .mn_panel {
+    position:absolute; inset: 16px;
+    background:#0f172a;
+    border:1px solid #1f2a44;
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow: 0 20px 80px rgba(0,0,0,.45);
+    display:flex; flex-direction:column;
+  }
+  #mancalaModal .mn_topbar{
+    display:flex; align-items:center; gap:10px;
+    padding:10px 12px;
+    background:#111a2e;
+    border-bottom:1px solid #1f2a44;
+    font-weight:800;
+    flex-wrap:wrap;
+  }
+  #mancalaModal .mn_title{ font-size:16px; }
+  #mancalaModal .mn_select{
+    margin-left:auto;
+    background:#1f2a44; color:#e6e9ef;
+    border:1px solid #2f3b5f;
+    padding:8px 10px; border-radius:10px; font-weight:800;
+    cursor:pointer;
+  }
+  #mancalaModal .mn_select2{
+    background:#1f2a44; color:#e6e9ef;
+    border:1px solid #2f3b5f;
+    padding:8px 10px; border-radius:10px; font-weight:800;
+    cursor:pointer;
+  }
+  #mancalaModal .mn_close{
+    background:#1f2a44; color:#e6e9ef;
+    border:1px solid #2f3b5f;
+    padding:8px 10px; border-radius:10px; font-weight:900;
+    cursor:pointer;
+  }
+  #mancalaModal .mn_frame{ width:100%; height:100%; border:0; background:#000; }
+
 </style>
 </head>
 
@@ -137,6 +172,7 @@
   <button id="btnDrawer">☰ Videos</button>
   <button id="btnNew">New mix</button>
   <button id="btnCheckers">Checkers</button>
+  <button id="btnMancala">Mancala</button>
   <div class="meta" id="meta">Loading…</div>
 </header>
 
@@ -151,23 +187,61 @@
   <div id="player"></div>
 </div>
 
-
 <div id="checkersModal" aria-hidden="true">
   <div class="ck_backdrop" data-close="1"></div>
   <div class="ck_panel">
     <div class="ck_topbar">
       <div class="ck_title">Checkers</div>
-      <select id="ckDiff" class="ck_select" title="Bot difficulty">
-        <option value="easy">Easy 🙂</option>
-        <option value="med" selected>Medium 🤔</option>
-        <option value="hard">Hard 😈</option>
+
+      <!-- UPDATED: 10 levels -->
+      <select id="ckDiff" class="ck_select" title="AI level">
+        <option value="1">1 (Very Easy)</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5" selected>5 (Medium)</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10 (Hard)</option>
       </select>
+
       <button id="ckClose" class="ck_close" title="Close">✕</button>
     </div>
     <iframe id="ckFrame" class="ck_frame" src="" loading="lazy"></iframe>
   </div>
 </div>
 
+<div id="mancalaModal" aria-hidden="true">
+  <div class="mn_backdrop" data-close="1"></div>
+  <div class="mn_panel">
+    <div class="mn_topbar">
+      <div class="mn_title">Mancala</div>
+
+      <select id="mnMode" class="mn_select2" title="Mode">
+        <option value="bot" selected>Vs Bot</option>
+        <option value="2p">2 Players</option>
+      </select>
+
+      <select id="mnLevel" class="mn_select" title="AI level">
+        <option value="1">Level 1</option>
+        <option value="2">Level 2</option>
+        <option value="3">Level 3</option>
+        <option value="4">Level 4</option>
+        <option value="5" selected>Level 5</option>
+        <option value="6">Level 6</option>
+        <option value="7">Level 7</option>
+        <option value="8">Level 8</option>
+        <option value="9">Level 9</option>
+        <option value="10">Level 10</option>
+      </select>
+
+      <button id="mnClose" class="mn_close" title="Close">✕</button>
+    </div>
+    <iframe id="mnFrame" class="mn_frame" src="" loading="lazy"></iframe>
+  </div>
+</div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
@@ -199,11 +273,14 @@ function stopAndReturn() {
   openDrawer(true);
 }
 
+function pauseVideoIfPlaying(){
+  try { if (PLAYER && typeof PLAYER.pauseVideo === "function") PLAYER.pauseVideo(); } catch {}
+}
+
 function playVideo(id) {
   document.getElementById("overlay").style.display = "none";
   openDrawer(false);
 
-  // IMPORTANT: ytplayer now fills stage via CSS (#player + #ytplayer)
   document.getElementById("player").innerHTML = `<div id="ytplayer"></div>`;
 
   PLAYER = new YT.Player("ytplayer", {
@@ -263,12 +340,53 @@ async function init() {
   CATALOG = (await r.json()).filter(v => v.video_id?.length === 11);
   renderMix();
   openDrawer(true);
+
+  // restore last chosen game settings (optional nice-to-have)
+  try{
+    const ck = localStorage.getItem("kidedu_ck_level");
+    if (ck) document.getElementById("ckDiff").value = ck;
+
+    const mnMode = localStorage.getItem("kidedu_mn_mode");
+    const mnLevel = localStorage.getItem("kidedu_mn_level");
+    if (mnMode) document.getElementById("mnMode").value = mnMode;
+    if (mnLevel) document.getElementById("mnLevel").value = mnLevel;
+
+    // If mode is 2p, disable level select
+    const modeSel = document.getElementById("mnMode");
+    const levelSel = document.getElementById("mnLevel");
+    if (modeSel && levelSel) levelSel.disabled = (modeSel.value === "2p");
+  } catch {}
 }
 
 document.getElementById("btnDrawer").onclick = () => openDrawer(true);
 document.getElementById("btnNew").onclick = () => renderMix();
 document.getElementById("edge").onclick = () => openDrawer(true);
 
+/* ========= Shared modal helpers ========= */
+function openModal(modalEl){
+  if(!modalEl) return;
+  // close the other modal if open
+  document.getElementById("checkersModal")?.classList.remove("open");
+  document.getElementById("mancalaModal")?.classList.remove("open");
+  document.getElementById("checkersModal")?.setAttribute("aria-hidden","true");
+  document.getElementById("mancalaModal")?.setAttribute("aria-hidden","true");
+
+  pauseVideoIfPlaying();
+  modalEl.classList.add("open");
+  modalEl.setAttribute("aria-hidden","false");
+  document.body.classList.add("modalOpen");
+}
+function closeModal(modalEl, frameEl){
+  if(!modalEl) return;
+  modalEl.classList.remove("open");
+  modalEl.setAttribute("aria-hidden","true");
+  if(frameEl) frameEl.src = "";
+  // if neither modal open, release scroll lock
+  const anyOpen =
+    document.getElementById("checkersModal")?.classList.contains("open") ||
+    document.getElementById("mancalaModal")?.classList.contains("open");
+  if(!anyOpen) document.body.classList.remove("modalOpen");
+}
 
 // --- Checkers (KidEdu) ---
 (function(){
@@ -279,24 +397,83 @@ document.getElementById("edge").onclick = () => openDrawer(true);
   const frame = document.getElementById("ckFrame");
 
   function openCheckers(){
-    const diff = diffSel.value || "med";
-    frame.src = `games/checkers/index.html?bot=${encodeURIComponent(diff)}`;
-    modal.classList.add("open");
-    modal.setAttribute("aria-hidden","false");
+    const level = (diffSel && diffSel.value) ? diffSel.value : "5";
+    try{ localStorage.setItem("kidedu_ck_level", level); } catch {}
+    frame.src = `games/checkers/index.html?level=${encodeURIComponent(level)}&v=${Date.now()}`;
+    openModal(modal);
   }
-  function closeCheckers(){
-    modal.classList.remove("open");
-    modal.setAttribute("aria-hidden","true");
-    frame.src = ""; // stop timers
-  }
+  function closeCheckers(){ closeModal(modal, frame); }
 
   if(btn) btn.addEventListener("click", openCheckers);
   if(closeBtn) closeBtn.addEventListener("click", closeCheckers);
-  if(modal) modal.addEventListener("click", (e)=>{ if(e.target?.dataset?.close) closeCheckers(); });
-  window.addEventListener("keydown", (e)=>{ if(e.key==="Escape" && modal?.classList.contains("open")) closeCheckers(); });
+  if(modal) modal.addEventListener("click", (e)=>{ if(e.target && e.target.dataset && e.target.dataset.close) closeCheckers(); });
   if(diffSel) diffSel.addEventListener("change", ()=>{ if(modal?.classList.contains("open")) openCheckers(); });
 })();
 
+
+// --- Mancala (KidEdu) ---
+(function(){
+  const btn = document.getElementById("btnMancala");
+  const modal = document.getElementById("mancalaModal");
+  const closeBtn = document.getElementById("mnClose");
+  const modeSel = document.getElementById("mnMode");
+  const levelSel = document.getElementById("mnLevel");
+  const frame = document.getElementById("mnFrame");
+
+  function syncMancalaControls(){
+    if(!modeSel || !levelSel) return;
+    levelSel.disabled = (modeSel.value === "2p");
+  }
+
+  function openMancala(){
+    const mode = (modeSel && modeSel.value) ? modeSel.value : "bot";
+    const level = (levelSel && levelSel.value) ? levelSel.value : "5";
+
+    try{
+      localStorage.setItem("kidedu_mn_mode", mode);
+      localStorage.setItem("kidedu_mn_level", level);
+    } catch {}
+
+    // If 2p mode, don't send level (still harmless if sent)
+    const qs =
+      `mode=${encodeURIComponent(mode)}` +
+      `&level=${encodeURIComponent(level)}` +
+      `&v=${Date.now()}`;
+
+    frame.src = `games/mancala/index.html?${qs}`;
+    openModal(modal);
+    syncMancalaControls();
+  }
+  function closeMancala(){ closeModal(modal, frame); }
+
+  if(btn) btn.addEventListener("click", openMancala);
+  if(closeBtn) closeBtn.addEventListener("click", closeMancala);
+  if(modal) modal.addEventListener("click", (e)=>{ if(e.target && e.target.dataset && e.target.dataset.close) closeMancala(); });
+
+  if(modeSel) modeSel.addEventListener("change", ()=>{
+    syncMancalaControls();
+    if(modal?.classList.contains("open")) openMancala();
+  });
+  if(levelSel) levelSel.addEventListener("change", ()=>{
+    if(modal?.classList.contains("open")) openMancala();
+  });
+
+  syncMancalaControls();
+})();
+
+
+// Global ESC closes whichever modal is open
+window.addEventListener("keydown", (e)=>{
+  if(e.key !== "Escape") return;
+
+  const ckModal = document.getElementById("checkersModal");
+  const mnModal = document.getElementById("mancalaModal");
+  if(ckModal?.classList.contains("open")){
+    closeModal(ckModal, document.getElementById("ckFrame"));
+  } else if(mnModal?.classList.contains("open")){
+    closeModal(mnModal, document.getElementById("mnFrame"));
+  }
+});
 
 init();
 </script>

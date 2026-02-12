@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>KidEdu Mancala</title>
+  <link rel="stylesheet" href="./mancala.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="title">Mancala</div>
+      <button class="pill" id="btnNew" type="button">New game</button>
+
+      <select class="pill" id="mode" aria-label="Mode">
+        <option value="bot" selected>Vs Bot</option>
+        <option value="2p">2 Players</option>
+      </select>
+
+      <select class="pill" id="level" aria-label="Level">
+        <option value="1">Level 1</option>
+        <option value="2">Level 2</option>
+        <option value="3">Level 3</option>
+        <option value="4">Level 4</option>
+        <option value="5" selected>Level 5</option>
+        <option value="6">Level 6</option>
+        <option value="7">Level 7</option>
+        <option value="8">Level 8</option>
+        <option value="9">Level 9</option>
+        <option value="10">Level 10</option>
+      </select>
+
+      <div class="note" id="scoreline">—</div>
+    </div>
+
+    <div class="main">
+      <div class="boardWrap">
+        <div class="board" id="board" aria-label="Mancala board"></div>
+      </div>
+
+      <div class="side">
+        <div class="status" id="status">—</div>
+        <div class="hint" id="hint">—</div>
+        <div class="log" id="log"></div>
+        <div class="hint">
+          Rules (Kalah): pick a pit on your side. Drop stones one-by-one clockwise (skip opponent store).
+          Land in your store = extra turn. Land in an empty pit on your side = capture opposite stones.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./mancala.js"></script>
+</body>
+</html>

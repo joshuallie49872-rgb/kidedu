@@ -1,578 +1,563 @@
-/* KidEdu Checkers — self-contained, no external libs.
-   Pieces:  1 = Red man,  2 = Red king
-           -1 = Blue man, -2 = Blue king
-   Red (player) starts at bottom, moves up (row-1). Blue moves down (row+1).
-*/
-const $ = (sel) => document.querySelector(sel);
+/* KidEdu Checkers — 10-level AI + Audio + GameOver overlay (mobile-safe) */
+(() => {
+  const $ = (id) => document.getElementById(id);
 
-const SIZE = 8;
+  const boardEl = $("board");
+  const btnNew = $("btnNew");
+  const btnBack = $("btnBack");
+  const btnSound = $("btnSound");
+  const levelSel = $("level");
 
-let board = null;
-let turn = 1;               // 1 = Red (player), -1 = Blue (bot)
-let selected = null;        // {r,c}
-let legal = [];             // moves for current turn
-let pendingChain = null;    // when multi-jump is forced: {r,c, continuations: [...]}
-let level = 4; // 1..10
-let thinking = false;
-let gameOver = false;
+  const statusEl = $("status");
+  const hintEl = $("hint");
+  const logEl = $("log");
+  const scoreEl = $("scoreline");
 
-function showEndOverlay(title, sub){
-  gameOver = true;
-  const ov = $("#endOverlay");
-  if(!ov) return;
-  $("#endTitle").textContent = title;
-  $("#endSub").textContent = sub || "";
-  ov.classList.add("show");
-  ov.setAttribute("aria-hidden","false");
-}
+  const overlay = $("overlay");
+  const overlayTitle = $("overlayTitle");
+  const overlayMsg = $("overlayMsg");
+  const btnOverlayNew = $("btnOverlayNew");
+  const btnOverlayBack = $("btnOverlayBack");
+  const btnOverlayClose = $("btnOverlayClose");
 
-function hideEndOverlay(){
-  const ov = $("#endOverlay");
-  if(!ov) return;
-  ov.classList.remove("show");
-  ov.setAttribute("aria-hidden","true");
-}
+  const EMPTY = 0;
+  const R = 1, RK = 2;     // Red (human)
+  const B = -1, BK = -2;   // Blue (bot)
 
-// --- Sound Engine (no audio assets) ---
-const SFX = (() => {
-  let enabled = false;
-  let ctx = null;
+  // --- Sound Engine (no assets) ---
+  const SFX = (() => {
+    let enabled = false;
+    let ctx = null;
 
-  function ensure(){
-    if(!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
-    return ctx;
-  }
+    function ensure(){
+      if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+      return ctx;
+    }
 
-  async function startFromUserGesture(){
-    const c = ensure();
-    if(c.state !== "running"){
-      try { await c.resume(); } catch {}
+    async function startFromUserGesture(){
+      const c = ensure();
+      if (c.state !== "running") {
+        try { await c.resume(); } catch {}
+      }
+    }
+
+    function beep(freq=440, dur=0.08, type="sine", gain=0.06){
+      if (!enabled) return;
+      const c = ensure();
+      if (c.state !== "running") return;
+      const o = c.createOscillator();
+      const g = c.createGain();
+      o.type = type;
+      o.frequency.value = freq;
+      g.gain.value = gain;
+      o.connect(g);
+      g.connect(c.destination);
+      o.start();
+      o.stop(c.currentTime + dur);
+    }
+
+    function select(){ beep(520, 0.05, "triangle", 0.05); }
+    function invalid(){ beep(180, 0.08, "sawtooth", 0.05); }
+    function move(){ beep(420, 0.06, "square", 0.045); }
+    function capture(){ beep(260, 0.07, "square", 0.06); setTimeout(()=>beep(180,0.06,"square",0.06), 50); }
+    function king(){ beep(740, 0.07, "triangle", 0.06); setTimeout(()=>beep(980,0.08,"triangle",0.06), 70); }
+    function win(){ beep(523.25,0.08,"triangle",0.06); setTimeout(()=>beep(659.25,0.08,"triangle",0.06), 90); setTimeout(()=>beep(783.99,0.12,"triangle",0.06), 180); }
+    function lose(){ beep(330,0.10,"sawtooth",0.05); setTimeout(()=>beep(220,0.12,"sawtooth",0.05), 120); }
+
+    function setEnabled(v){
+      enabled = !!v;
+      if (btnSound) btnSound.textContent = `Audio: ${enabled ? "On" : "Off"}`;
+    }
+
+    return { startFromUserGesture, setEnabled, get enabled(){return enabled;},
+             select, invalid, move, capture, king, win, lose };
+  })();
+
+  // allow parent to set level via ?level=1..10 (and legacy ?bot=easy|med|hard)
+  const qs = new URLSearchParams(location.search);
+  const qLevel = qs.get("level");
+  const qBot = qs.get("bot"); // legacy
+  if (levelSel) {
+    if (qLevel && /^\d+$/.test(qLevel)) {
+      const v = Math.min(10, Math.max(1, Number(qLevel)));
+      levelSel.value = String(v);
+    } else if (qBot) {
+      // map legacy to 1/5/10
+      if (qBot === "easy") levelSel.value = "1";
+      else if (qBot === "hard") levelSel.value = "10";
+      else levelSel.value = "5";
     }
   }
 
-  function beep(freq=440, dur=0.08, type="sine", gain=0.06){
-    if(!enabled) return;
-    const c = ensure();
-    if(c.state !== "running") return; // iOS: must be unlocked by user gesture
-    const o = c.createOscillator();
-    const g = c.createGain();
-    o.type = type;
-    o.frequency.value = freq;
-    g.gain.value = gain;
-    o.connect(g);
-    g.connect(c.destination);
-    o.start();
-    o.stop(c.currentTime + dur);
+  // --- AI tuning by level ---
+  // depth increases with level; randomness decreases with level.
+  function aiSettings(level){
+    const L = Math.min(10, Math.max(1, Number(level)||5));
+    // depths tuned so mobile doesn't melt:
+    // 1-2: very shallow + random
+    // 3-5: shallow minimax
+    // 6-10: deeper
+    const depth = (L <= 2) ? 1
+                : (L <= 4) ? 2
+                : (L <= 6) ? 3
+                : (L <= 8) ? 4
+                : (L === 9) ? 5
+                : 6;
+
+    // chance to choose a non-best move sometimes (makes it "easier")
+    const randomness = (11 - L) / 10; // L1=1.0, L10=0.1
+    return { depth, randomness };
   }
 
-  function select(){ beep(520, 0.05, "triangle", 0.05); }
-  function invalid(){ beep(180, 0.08, "sawtooth", 0.05); }
-  function move(){ beep(420, 0.06, "square", 0.045); }
-  function capture(){ beep(260, 0.07, "square", 0.06); setTimeout(()=>beep(180,0.06,"square",0.06), 50); }
-  function king(){ beep(740, 0.07, "triangle", 0.06); setTimeout(()=>beep(980,0.08,"triangle",0.06), 70); }
-  function win(){ beep(523.25,0.08,"triangle",0.06); setTimeout(()=>beep(659.25,0.08,"triangle",0.06), 90); setTimeout(()=>beep(783.99,0.12,"triangle",0.06), 180); }
-  function lose(){ beep(330,0.10,"sawtooth",0.05); setTimeout(()=>beep(220,0.12,"sawtooth",0.05), 120); }
+  let board = null;
+  let turn = R;
+  let selected = null;
+  let legalMoves = [];
+  let mustContinueCapture = null;
+  let busy = false;
+  let gameOver = false;
 
-  function setEnabled(v){
-    enabled = !!v;
-    const btn = document.querySelector("#btnSound");
-    if(btn) btn.textContent = `Audio: ${enabled ? "On" : "Off"}`;
+  function setStatus(t){ if(statusEl) statusEl.textContent = t; }
+  function setHint(t){ if(hintEl) hintEl.textContent = t; }
+  function logLine(t){
+    if(!logEl) return;
+    const div = document.createElement("div");
+    div.textContent = t;
+    logEl.prepend(div);
   }
 
-  return { startFromUserGesture, setEnabled, get enabled(){return enabled;}, select, invalid, move, capture, king, win, lose };
-})();
+  function showOverlay(title, msg){
+    gameOver = true;
+    if (overlayTitle) overlayTitle.textContent = title;
+    if (overlayMsg) overlayMsg.textContent = msg;
+    if (overlay) overlay.classList.remove("hidden");
+  }
+  function hideOverlay(){
+    if (overlay) overlay.classList.add("hidden");
+  }
 
+  function goBack(){
+    // if inside iframe, this still navigates within iframe; fine for KidEdu
+    location.href = "../../approved_player.html";
+  }
 
-function cloneBoard(b){ return b.map(row => row.slice()); }
-
-function inBounds(r,c){ return r>=0 && r<SIZE && c>=0 && c<SIZE; }
-
-function pieceAt(b,r,c){ return b[r][c]; }
-function sideOf(p){ return p===0 ? 0 : (p>0 ? 1 : -1); }
-function isKing(p){ return Math.abs(p)===2; }
-
-function initBoard(){
-  const b = Array.from({length: SIZE}, () => Array(SIZE).fill(0));
-  // Blue on top rows 0..2 on dark squares
-  for(let r=0;r<3;r++){
-    for(let c=0;c<SIZE;c++){
-      if((r+c)%2===1) b[r][c] = -1;
+  function buildBoardDOM(){
+    boardEl.innerHTML = "";
+    for(let r=0;r<8;r++){
+      for(let c=0;c<8;c++){
+        const sq = document.createElement("button");
+        sq.type = "button";
+        sq.className = "sq " + (((r+c)%2===1) ? "dark":"light");
+        sq.dataset.r = String(r);
+        sq.dataset.c = String(c);
+        boardEl.appendChild(sq);
+      }
     }
+    boardEl.addEventListener("pointerdown", onBoardPointerDown, { passive:false });
+    boardEl.addEventListener("touchmove", (e)=>e.preventDefault(), { passive:false });
   }
-  // Red on bottom rows 5..7
-  for(let r=5;r<SIZE;r++){
-    for(let c=0;c<SIZE;c++){
-      if((r+c)%2===1) b[r][c] = 1;
+
+  function newGame(){
+    board = Array.from({length:8}, ()=>Array(8).fill(EMPTY));
+    for(let r=0;r<=2;r++){
+      for(let c=0;c<8;c++){
+        if((r+c)%2===1) board[r][c]=B;
+      }
     }
+    for(let r=5;r<=7;r++){
+      for(let c=0;c<8;c++){
+        if((r+c)%2===1) board[r][c]=R;
+      }
+    }
+    turn = R;
+    selected = null;
+    legalMoves = [];
+    mustContinueCapture = null;
+    busy = false;
+    gameOver = false;
+    hideOverlay();
+    if(logEl) logEl.textContent = "";
+    setStatus("Your turn (Red)");
+    setHint("Tap a red piece, then tap a highlighted square.");
+    render();
   }
-  return b;
-}
 
-function promoteIfNeeded(b, r, c){
-  const p = b[r][c];
-  if(p===1 && r===0) b[r][c]=2;
-  if(p===-1 && r===SIZE-1) b[r][c]=-2;
-}
+  function getSq(r,c){
+    const idx = r*8+c;
+    return boardEl.children[idx] || null;
+  }
 
-function dirsForPiece(p){
-  const s = sideOf(p);
-  if(isKing(p)) return [[-1,-1],[-1,1],[1,-1],[1,1]];
-  return s===1 ? [[-1,-1],[-1,1]] : [[1,-1],[1,1]];
-}
+  function render(){
+    if(!board) return;
+    for(const sq of boardEl.children){
+      sq.classList.remove("sel","move","cap");
+      sq.innerHTML = "";
+    }
 
-function genMovesForPiece(b, r, c){
-  const p = b[r][c];
-  if(p===0) return {steps:[], jumps:[]};
-  const s = sideOf(p);
-  const dirs = dirsForPiece(p);
+    if(selected){
+      const s = getSq(selected.r, selected.c);
+      if(s) s.classList.add("sel");
+      for(const m of legalMoves){
+        const d = getSq(m.tr, m.tc);
+        if(!d) continue;
+        d.classList.add("move");
+        if(m.captures.length) d.classList.add("cap");
+      }
+    }
 
-  const steps=[];
-  const jumps=[];
+    let redCount=0, blueCount=0;
+    for(let r=0;r<8;r++) for(let c=0;c<8;c++){
+      const v = board[r][c];
+      if(v===EMPTY) continue;
+      const sq = getSq(r,c);
+      const p = document.createElement("div");
+      p.className = "piece " + (v>0 ? "red":"blue");
+      if(Math.abs(v)===2) p.classList.add("king");
 
-  for(const [dr,dc] of dirs){
-    const r1=r+dr, c1=c+dc;
-    if(!inBounds(r1,c1)) continue;
-    if(b[r1][c1]===0){
-      steps.push({from:[r,c], to:[r1,c1], captures:[]});
-    } else {
-      const mid = b[r1][c1];
-      if(sideOf(mid)===-s){
-        const r2=r+2*dr, c2=c+2*dc;
-        if(inBounds(r2,c2) && b[r2][c2]===0){
-          jumps.push({from:[r,c], to:[r2,c2], captures:[[r1,c1]]});
+      if(v>0) redCount++; else blueCount++;
+
+      if(Math.abs(v)===2){
+        const k = document.createElement("div");
+        k.className = "kingMark";
+        k.textContent = "★";
+        p.appendChild(k);
+      }
+      sq.appendChild(p);
+    }
+    if(scoreEl) scoreEl.textContent = `Red: ${redCount}  Blue: ${blueCount}`;
+  }
+
+  function onBoardPointerDown(e){
+    if(busy || gameOver) return;
+    const target = e.target.closest(".sq");
+    if(!target) return;
+    e.preventDefault();
+
+    const r = Number(target.dataset.r);
+    const c = Number(target.dataset.c);
+
+    if(turn !== R) return;
+    handleHumanTap(r,c);
+  }
+
+  function handleHumanTap(r,c){
+    const v = board[r][c];
+
+    if(mustContinueCapture){
+      if(!(selected && selected.r===mustContinueCapture.r && selected.c===mustContinueCapture.c)){
+        selected = {...mustContinueCapture};
+        legalMoves = movesForPiece(board, R, mustContinueCapture.r, mustContinueCapture.c, true);
+      }
+    }
+
+    if(v>0){
+      if(mustContinueCapture && (r!==mustContinueCapture.r || c!==mustContinueCapture.c)){
+        setHint("You must continue capturing with the same piece.");
+        SFX.invalid();
+        return;
+      }
+      selected = {r,c};
+      const anyCaps = allMoves(board, R, true).length>0;
+      legalMoves = movesForPiece(board, R, r, c, anyCaps);
+      setHint(anyCaps ? "Capture is mandatory: choose a highlighted capture square." : "Choose a highlighted square.");
+      SFX.select();
+      render();
+      return;
+    }
+
+    if(selected){
+      const m = legalMoves.find(x => x.tr===r && x.tc===c);
+      if(!m){ SFX.invalid(); return; }
+
+      const from = {...selected};
+      applyMove(board, m);
+
+      if (m.captures.length) SFX.capture(); else SFX.move();
+      if (m.promote) SFX.king();
+
+      logLine(`Red: ${pos(from.r,from.c)} → ${pos(m.tr,m.tc)}${m.captures.length?" (capture)":""}`);
+
+      if(m.captures.length){
+        const more = movesForPiece(board, R, m.tr, m.tc, true);
+        if(more.length){
+          mustContinueCapture = {r:m.tr,c:m.tc};
+          selected = {r:m.tr,c:m.tc};
+          legalMoves = more;
+          setHint("Multi-capture! Continue capturing.");
+          render();
+          return;
         }
       }
-    }
-  }
-  return {steps, jumps};
-}
 
-// For multi-jump, after one jump we must continue jumping if possible.
-function genJumpChains(b, startR, startC){
-  const p0 = b[startR][startC];
-  const s = sideOf(p0);
-
-  function dfs(b2, r, c, capturesSoFar){
-    const {jumps} = genMovesForPiece(b2, r, c);
-    const nextJumps = jumps.filter(m => m.captures.length===1); // always 1 mid capture each hop
-    if(nextJumps.length===0){
-      return [{from:[startR,startC], to:[r,c], captures: capturesSoFar.slice()}];
-    }
-    const out=[];
-    for(const j of nextJumps){
-      // apply hop on a copy
-      const b3 = cloneBoard(b2);
-      const [fr,fc]=[r,c];
-      const [tr,tc]=j.to;
-      const [cr,cc]=j.captures[0];
-      const moving = b3[fr][fc];
-      b3[fr][fc]=0;
-      b3[cr][cc]=0;
-      b3[tr][tc]=moving;
-      promoteIfNeeded(b3,tr,tc); // promotion can happen mid-chain in some rules; we allow it.
-      out.push(...dfs(b3, tr, tc, capturesSoFar.concat([[cr,cc]])));
-    }
-    return out;
-  }
-
-  return dfs(b, startR, startC, []);
-}
-
-function genAllLegalMoves(b, side){
-  const allSteps=[];
-  let allJumps=[];
-  for(let r=0;r<SIZE;r++){
-    for(let c=0;c<SIZE;c++){
-      if(sideOf(b[r][c])!==side) continue;
-      const chains = genJumpChains(b, r, c);
-      // chains will include "no jump" case only if no jumps exist, but our dfs uses jumps only
-      // We detect if piece has any jump:
-      const {jumps} = genMovesForPiece(b, r, c);
-      if(jumps.length>0){
-        // Real jump chains
-        allJumps = allJumps.concat(chains.filter(m => m.captures.length>0));
-      } else {
-        const {steps} = genMovesForPiece(b, r, c);
-        allSteps.push(...steps);
-      }
-    }
-  }
-  // If any capture exists, captures are mandatory
-  if(allJumps.length>0) return allJumps;
-  return allSteps;
-}
-
-function applyMove(b, move){
-  const b2 = cloneBoard(b);
-  const [fr,fc]=move.from;
-  const [tr,tc]=move.to;
-  const moving = b2[fr][fc];
-  b2[fr][fc]=0;
-  for(const [cr,cc] of move.captures){
-    b2[cr][cc]=0;
-  }
-  b2[tr][tc]=moving;
-  promoteIfNeeded(b2,tr,tc);
-  return b2;
-}
-
-function countPieces(b){
-  let red=0, blue=0;
-  for(let r=0;r<SIZE;r++){
-    for(let c=0;c<SIZE;c++){
-      const p=b[r][c];
-      if(p>0) red++;
-      if(p<0) blue++;
-    }
-  }
-  return {red, blue};
-}
-
-function evalBoard(b){
-  // Simple heuristic: material + king bonus + advancement + mobility
-  let score=0;
-  for(let r=0;r<SIZE;r++){
-    for(let c=0;c<SIZE;c++){
-      const p=b[r][c];
-      if(p===0) continue;
-      const s=sideOf(p);
-      const king=isKing(p);
-      const base = king ? 3.0 : 1.0;
-      const adv = king ? 0 : (s===1 ? (7-r)/7 : r/7); // encourage moving forward
-      score += s * (base + 0.15*adv);
-    }
-  }
-  // mobility
-  const mRed = genAllLegalMoves(b, 1).length;
-  const mBlue = genAllLegalMoves(b, -1).length;
-  score += 0.03*(mRed - mBlue);
-  return score; // positive favors Red, negative favors Blue
-}
-
-function minimax(b, side, depth, alpha, beta){
-  const moves = genAllLegalMoves(b, side);
-  if(depth===0 || moves.length===0){
-    // if no moves, side loses
-    if(moves.length===0){
-      return {score: side===1 ? -999 : 999, move: null};
-    }
-    return {score: evalBoard(b), move: null};
-  }
-
-  let bestMove=null;
-
-  if(side===1){
-    let best=-Infinity;
-    for(const mv of moves){
-      const b2 = applyMove(b, mv);
-      const res = minimax(b2, -1, depth-1, alpha, beta);
-      if(res.score>best){ best=res.score; bestMove=mv; }
-      alpha = Math.max(alpha, best);
-      if(beta<=alpha) break;
-    }
-    return {score: best, move: bestMove};
-  } else {
-    let best=Infinity;
-    for(const mv of moves){
-      const b2 = applyMove(b, mv);
-      const res = minimax(b2, 1, depth-1, alpha, beta);
-      if(res.score<best){ best=res.score; bestMove=mv; }
-      beta = Math.min(beta, best);
-      if(beta<=alpha) break;
-    }
-    return {score: best, move: bestMove};
-  }
-}
-
-function chooseBotMove(){
-  const moves = genAllLegalMoves(board, -1);
-  if(moves.length===0) return null;
-
-  // Level 1..10:
-  // - lower levels: more random + shallow lookahead
-  // - higher levels: deeper minimax + less randomness
-  const L = Math.max(1, Math.min(10, level|0));
-
-  // randomness: 50% at L1 -> 5% at L10
-  const randProb = Math.max(0.05, (11 - L) / 20);
-
-  // L1: purely random
-  if(L === 1){
-    return moves[Math.floor(Math.random()*moves.length)];
-  }
-
-  // quick greedy (1-ply eval): used for L2-L4
-  const greedyBest = () => {
-    let best=null, bestScore=Infinity;
-    for(const mv of moves){
-      const b2 = applyMove(board, mv);
-      const sc = evalBoard(b2); // bot wants low score
-      if(sc<bestScore){ bestScore=sc; best=mv; }
-    }
-    return best || moves[0];
-  };
-
-  if(L <= 4){
-    if(Math.random() < randProb) return moves[Math.floor(Math.random()*moves.length)];
-    return greedyBest();
-  }
-
-  // minimax depth by level (kept sane for mobile)
-  const depthByLevel = {
-    5: 2,
-    6: 3,
-    7: 4,
-    8: 5,
-    9: 5,
-    10: 6
-  };
-  const depth = depthByLevel[L] ?? 4;
-
-  // small randomness still, to make it feel less "perfect"
-  if(Math.random() < randProb) return moves[Math.floor(Math.random()*moves.length)];
-
-  const res = minimax(board, -1, depth, -Infinity, Infinity);
-  return res.move || greedyBest();
-}
-
-function render(){
-  const boardEl = $("#board");
-  boardEl.innerHTML = "";
-
-  const isPlayersTurn = (turn===1);
-  $("#status").textContent = thinking ? "Bot thinking…" : (isPlayersTurn ? "Your turn (Red)" : "Bot turn (Blue)");
-  $("#hint").textContent = isPlayersTurn ? "Tap a red piece, then tap a highlighted square." : "Wait for the bot.";
-
-  legal = genAllLegalMoves(board, turn);
-
-  const moveTargets = new Map(); // key "r,c" => {moves:[], capture:boolean}
-  if(selected){
-    for(const mv of legal){
-      if(mv.from[0]===selected.r && mv.from[1]===selected.c){
-        const key = `${mv.to[0]},${mv.to[1]}`;
-        const prev = moveTargets.get(key) || {moves:[], capture:false};
-        prev.moves.push(mv);
-        if(mv.captures.length>0) prev.capture=true;
-        moveTargets.set(key, prev);
-      }
-    }
-  }
-
-  for(let r=0;r<SIZE;r++){
-    for(let c=0;c<SIZE;c++){
-      const sq = document.createElement("div");
-      const dark = (r+c)%2===1;
-      sq.className = "sq " + (dark ? "dark":"light");
-      sq.dataset.r = r;
-      sq.dataset.c = c;
-
-      if(selected && selected.r===r && selected.c===c) sq.classList.add("sel");
-
-      const tgt = moveTargets.get(`${r},${c}`);
-      if(tgt){
-        sq.classList.add("move");
-        if(tgt.capture) sq.classList.add("capture");
-      }
-
-      const p = board[r][c];
-      if(p!==0){
-        const pc = document.createElement("div");
-        pc.className = "piece " + (p>0 ? "p1":"p2") + (isKing(p) ? " king":"");
-        sq.appendChild(pc);
-      }
-
-      sq.addEventListener("click", () => onSquareClick(r,c));
-      boardEl.appendChild(sq);
-    }
-  }
-
-  const counts = countPieces(board);
-  $("#scoreline").textContent = `Red: ${counts.red}    Blue: ${counts.blue}`;
-}
-
-function logLine(s){
-  const el = $("#log");
-  el.textContent += (el.textContent ? "\n":"") + s;
-  el.scrollTop = el.scrollHeight;
-}
-
-function clearLog(){ $("#log").textContent = ""; }
-
-function endCheck(){
-  const moves = genAllLegalMoves(board, turn);
-  const counts = countPieces(board);
-  if(counts.red===0){
-    logLine("Blue wins.");
-    $("#status").textContent = "Blue wins";
-    $("#hint").textContent = "Tap New game to play again.";
-    SFX.lose();
-    showEndOverlay("Blue wins", "Want a rematch?");
-    return true;
-  }
-  if(counts.blue===0){
-    logLine("Red wins.");
-    $("#status").textContent = "You won! (Red)";
-    $("#hint").textContent = "Tap New game to play again.";
-    SFX.win();
-    showEndOverlay("You won! (Red)", "Nice! Play again or go back.");
-    return true;
-  }
-  if(moves.length===0){
-    logLine((turn===1 ? "Red" : "Blue") + " has no legal moves.");
-    const winner = (turn===1 ? -1 : 1);
-    logLine((winner===1 ? "Red" : "Blue") + " wins.");
-    $("#status").textContent = (winner===1 ? "You won! (Red)" : "Blue wins");
-    $("#hint").textContent = "Tap New game to play again.";
-    if(winner===1) { SFX.win(); showEndOverlay("You won! (Red)", "Opponent has no moves."); }
-    else { SFX.lose(); showEndOverlay("Blue wins", "You have no legal moves."); }
-    return true;
-  }
-  return false;
-}
-
-function onSquareClick(r,c){
-  if(thinking) return;
-  if(gameOver) return;
-  if(turn!==1) return; // only player clicks on their turn
-
-  const p = board[r][c];
-  const s = sideOf(p);
-
-  if(selected){
-    // Try move to clicked square
-    const candidates = legal.filter(mv => mv.from[0]===selected.r && mv.from[1]===selected.c && mv.to[0]===r && mv.to[1]===c);
-    if(candidates.length){
-      // If multiple (rare), pick the one with most captures.
-      candidates.sort((a,b)=>b.captures.length-a.captures.length);
-      doMove(candidates[0]);
-      return;
-    } else {
-      // selected but tapped a non-move square
-      SFX.invalid();
-    }
-  }
-
-  // Select a piece
-  if(s===1){
-    selected = {r,c};
-    SFX.select();
-    render();
-  } else {
-    // clicking empty or enemy clears selection
-    if(selected) SFX.invalid();
-    selected = null;
-    render();
-  }
-}
-
-function doMove(move){
-  const movingBefore = board[move.from[0]][move.from[1]];
-  board = applyMove(board, move);
-  const movedAfter = board[move.to[0]][move.to[1]];
-  if(move.captures.length) SFX.capture(); else SFX.move();
-  if(!isKing(movingBefore) && isKing(movedAfter)) SFX.king();
-  logLine(`Red: ${move.from.join(",")} → ${move.to.join(",")}` + (move.captures.length?` (x${move.captures.length})`:""));
-  selected = null;
-
-  // switch turn
-  turn *= -1;
-
-  render();
-  if(endCheck()) return;
-
-  // bot turn
-  botTurn();
-}
-
-function botTurn(){
-  if(gameOver) return;
-  thinking = true;
-  render();
-
-  setTimeout(() => {
-    const mv = chooseBotMove();
-    if(!mv){
-      thinking=false;
+      mustContinueCapture = null;
+      selected = null;
+      legalMoves = [];
       render();
-      endCheck();
-      return;
+
+      if(isGameOver(board)) return endGame();
+
+      turn = B;
+      setStatus("Bot thinking (Blue)...");
+      setHint("—");
+      busy = true;
+      setTimeout(() => { botMove(); busy=false; }, 120);
     }
-    const movingBefore = board[mv.from[0]][mv.from[1]];
-    board = applyMove(board, mv);
-    const movedAfter = board[mv.to[0]][mv.to[1]];
-    if(mv.captures.length) SFX.capture(); else SFX.move();
-    if(!isKing(movingBefore) && isKing(movedAfter)) SFX.king();
-    logLine(`Blue: ${mv.from.join(",")} → ${mv.to.join(",")}` + (mv.captures.length?` (x${mv.captures.length})`:""));
-    turn *= -1;
-    thinking = false;
+  }
+
+  function pos(r,c){ return String.fromCharCode(65+c) + (8-r); }
+  function inBounds(r,c){ return r>=0 && r<8 && c>=0 && c<8; }
+  function cloneBoard(bd){ return bd.map(row => row.slice()); }
+  function willPromote(side, v, tr){
+    if(Math.abs(v)===2) return false;
+    return (side===R && tr===0) || (side===B && tr===7);
+  }
+
+  function movesForPiece(bd, side, r, c, capturesOnly){
+    const v = bd[r][c];
+    if(v===EMPTY) return [];
+    const isKing = Math.abs(v)===2;
+
+    const dirs = [];
+    if(side===R || isKing) dirs.push([-1,-1],[-1,+1]);
+    if(side===B || isKing) dirs.push([+1,-1],[+1,+1]);
+
+    // capture DFS
+    const captures = [];
+    function dfs(brd, cr, cc, pathCaps, pieceVal){
+      let found=false;
+      const k = Math.abs(pieceVal)===2;
+
+      const dlist = [];
+      if(side===R || k) dlist.push([-1,-1],[-1,+1]);
+      if(side===B || k) dlist.push([+1,-1],[+1,+1]);
+
+      for(const [dr,dc] of dlist){
+        const mr = cr+dr, mc = cc+dc;
+        const tr = cr+dr*2, tc = cc+dc*2;
+        if(!inBounds(tr,tc) || !inBounds(mr,mc)) continue;
+        const mid = brd[mr][mc];
+        const dst = brd[tr][tc];
+        if(dst!==EMPTY) continue;
+        if(side===R && mid>=0) continue;
+        if(side===B && mid<=0) continue;
+        if(mid===EMPTY) continue;
+
+        found=true;
+        const nb = cloneBoard(brd);
+        nb[cr][cc]=EMPTY;
+        nb[mr][mc]=EMPTY;
+        nb[tr][tc]=pieceVal;
+
+        dfs(nb, tr, tc, pathCaps.concat([{r:mr,c:mc}]), pieceVal);
+      }
+
+      if(!found && pathCaps.length){
+        captures.push({
+          fr:r, fc:c, tr:cr, tc:cc,
+          captures: pathCaps.slice(),
+          promote: willPromote(side, v, cr)
+        });
+      }
+    }
+    dfs(bd, r, c, [], v);
+    if(captures.length) return captures;
+    if(capturesOnly) return [];
+
+    const moves=[];
+    for(const [dr,dc] of dirs){
+      const tr=r+dr, tc=c+dc;
+      if(!inBounds(tr,tc)) continue;
+      if(bd[tr][tc]!==EMPTY) continue;
+      moves.push({ fr:r, fc:c, tr, tc, captures:[], promote: willPromote(side, v, tr) });
+    }
+    return moves;
+  }
+
+  function allMoves(bd, side, capturesOnly){
+    let moves=[];
+    for(let r=0;r<8;r++) for(let c=0;c<8;c++){
+      const v = bd[r][c];
+      if(side===R && v<=0) continue;
+      if(side===B && v>=0) continue;
+      moves = moves.concat(movesForPiece(bd, side, r, c, capturesOnly));
+    }
+    if(capturesOnly) return moves.filter(m=>m.captures.length);
+    const caps = moves.filter(m=>m.captures.length);
+    return caps.length ? caps : moves;
+  }
+
+  function applyMove(bd, m){
+    const v = bd[m.fr][m.fc];
+    bd[m.fr][m.fc] = EMPTY;
+    for(const cap of m.captures) bd[cap.r][cap.c]=EMPTY;
+    let nv=v;
+    if(m.promote) nv = (v>0) ? RK : BK;
+    bd[m.tr][m.tc]=nv;
+  }
+
+  function evalBoard(bd){
+    let score=0;
+    for(let r=0;r<8;r++) for(let c=0;c<8;c++){
+      const v=bd[r][c];
+      if(v===EMPTY) continue;
+      const val = (Math.abs(v)===2) ? 3.0 : 1.0;
+      // blue wants higher score
+      if(v<0) score += val + (r*0.02);
+      else score -= val + ((7-r)*0.02);
+    }
+    return score;
+  }
+  function evalTerminal(side){ return (side===R) ? 9999 : -9999; }
+
+  function minimax(bd, depth, side, alpha, beta){
+    if(depth<=0) return evalBoard(bd);
+    const moves = allMoves(bd, side, false);
+    if(!moves.length) return evalTerminal(side);
+
+    if(side===B){
+      let best=-Infinity;
+      for(const m of moves){
+        const nb=cloneBoard(bd);
+        applyMove(nb,m);
+        const v=minimax(nb, depth-1, R, alpha, beta);
+        best=Math.max(best,v);
+        alpha=Math.max(alpha,best);
+        if(beta<=alpha) break;
+      }
+      return best;
+    }else{
+      let best=Infinity;
+      for(const m of moves){
+        const nb=cloneBoard(bd);
+        applyMove(nb,m);
+        const v=minimax(nb, depth-1, B, alpha, beta);
+        best=Math.min(best,v);
+        beta=Math.min(beta,best);
+        if(beta<=alpha) break;
+      }
+      return best;
+    }
+  }
+
+  function pickMove(bd, moves, depth, randomness){
+    // score all
+    const scored = moves.map(m => {
+      const nb=cloneBoard(bd);
+      applyMove(nb,m);
+      const val=minimax(nb, depth-1, R, -Infinity, Infinity);
+      return { m, val };
+    });
+    scored.sort((a,b)=>b.val-a.val);
+
+    // randomness: sometimes pick from top N instead of best
+    const topN = Math.min(scored.length, Math.max(1, Math.round(1 + randomness * 5)));
+    const pickIndex = (Math.random() < randomness && topN > 1)
+      ? Math.floor(Math.random() * topN)
+      : 0;
+
+    return scored[pickIndex].m;
+  }
+
+  function botMove(){
+    if(gameOver) return;
+    const level = levelSel ? Number(levelSel.value) : 5;
+    const { depth, randomness } = aiSettings(level);
+
+    const moves = allMoves(board, B, false);
+    if(!moves.length) return endGame();
+
+    const best = pickMove(board, moves, depth, randomness);
+    applyMove(board, best);
+
+    if (best.captures.length) SFX.capture(); else SFX.move();
+    if (best.promote) SFX.king();
+
+    logLine(`Blue: ${pos(best.fr,best.fc)} → ${pos(best.tr,best.tc)}${best.captures.length?" (capture)":""}`);
+
+    // chain captures
+    if(best.captures.length){
+      let cr=best.tr, cc=best.tc;
+      while(true){
+        const more = movesForPiece(board, B, cr, cc, true);
+        if(!more.length) break;
+        const next = pickMove(board, more, Math.max(1, depth-1), randomness * 0.6);
+        applyMove(board,next);
+
+        SFX.capture();
+        if (next.promote) SFX.king();
+
+        logLine(`Blue: ${pos(next.fr,next.fc)} → ${pos(next.tr,next.tc)} (capture)`);
+        cr=next.tr; cc=next.tc;
+      }
+    }
+
     render();
-    endCheck();
-  }, 250);
-}
+    if(isGameOver(board)) return endGame();
 
-function newGame(){
-  gameOver = false;
-  hideEndOverlay();
-  board = initBoard();
-  turn = 1;
-  selected = null;
-  thinking = false;
-  clearLog();
-  logLine("New game.");
-  render();
-}
+    turn=R;
+    setStatus("Your turn (Red)");
+    setHint("Tap a red piece, then tap a highlighted square.");
+  }
 
-function setDifficultyFromURL(){
-  const q = new URLSearchParams(location.search);
+  function isGameOver(bd){
+    return allMoves(bd, R, false).length===0 || allMoves(bd, B, false).length===0;
+  }
 
-  // preferred: ?level=1..10
-  const raw = q.get("level") || q.get("bot");
-  const n = Number(raw);
-  if(Number.isFinite(n) && n>=1 && n<=10) level = Math.floor(n);
+  function endGame(){
+    const r = allMoves(board, R, false).length;
+    const b = allMoves(board, B, false).length;
 
-  // backward-compat: ?bot=easy|med|hard
-  const b = q.get("bot");
-  if(b==="easy") level = 2;
-  if(b==="med") level = 4;
-  if(b==="hard") level = 8;
+    let title = "Game Over";
+    let msg = "Tap New game to play again.";
 
-  const sel = $("#difficulty");
-  if(sel) sel.value = String(level);
-}
+    if(r===0 && b===0){
+      title = "Draw";
+      msg = "No moves for either side.";
+    } else if(r===0){
+      title = "Blue wins";
+      msg = "You have no legal moves.";
+      SFX.lose();
+    } else if(b===0){
+      title = "You won!";
+      msg = "Blue has no legal moves.";
+      SFX.win();
+    } else {
+      title = "Game Over";
+      msg = "No legal moves remain.";
+    }
 
-function wireUI(){
-  $("#btnNew").addEventListener("click", () => newGame());
+    setStatus(title);
+    setHint("Tap New game to play again.");
+    turn=R; busy=false;
 
-  // Back buttons
-  const goBack = () => { window.location.href = "../../approved_player.html"; };
-  const bb = $("#btnBack"); if(bb) bb.addEventListener("click", goBack);
-  const eb = $("#btnEndBack"); if(eb) eb.addEventListener("click", goBack);
+    showOverlay(title, msg);
+  }
 
-  const en = $("#btnEndNew"); if(en) en.addEventListener("click", () => newGame());
-  const ec = $("#btnEndClose"); if(ec) ec.addEventListener("click", () => hideEndOverlay());
-
-  const snd = $("#btnSound");
-  if(snd){
-    snd.textContent = "Audio: Off";
-    snd.addEventListener("click", async () => {
+  // wiring
+  if (btnSound) {
+    btnSound.textContent = "Audio: Off";
+    btnSound.addEventListener("click", async () => {
       await SFX.startFromUserGesture();
       SFX.setEnabled(!SFX.enabled);
-      if(SFX.enabled) SFX.select();
+      if (SFX.enabled) SFX.select();
     });
   }
-  const ov = $("#endOverlay");
-  if(ov){
-    ov.addEventListener("click", (e)=>{ if(e.target===ov) hideEndOverlay(); });
+
+  if (btnBack) btnBack.addEventListener("click", goBack);
+  if (btnNew) btnNew.addEventListener("click", () => { hideOverlay(); newGame(); });
+
+  if (btnOverlayNew) btnOverlayNew.addEventListener("click", () => { hideOverlay(); newGame(); });
+  if (btnOverlayBack) btnOverlayBack.addEventListener("click", goBack);
+  if (btnOverlayClose) btnOverlayClose.addEventListener("click", () => hideOverlay());
+
+  if (levelSel) {
+    levelSel.addEventListener("change", () => {
+      logLine(`AI Level: ${levelSel.value}`);
+    });
   }
 
-  $("#difficulty").addEventListener("change", (e) => {
-    level = Math.max(1, Math.min(10, Number(e.target.value)||4));
-    logLine(`Level: ${level}`);
-  });
-}
-
-window.addEventListener("DOMContentLoaded", () => {
-  setDifficultyFromURL();
-  wireUI();
+  // boot
+  if(!boardEl) return;
+  buildBoardDOM();
   newGame();
-});
+})();
