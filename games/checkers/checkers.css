@@ -1,6 +1,87 @@
-/* iPad Safari fix applied */
+/* KidEdu Checkers (mobile + iPad safe) */
+
 :root{
+  --bg:#0b1220;
+  --panel:#0f172a;
+  --panel2:#111a2e;
+  --text:#e6e9ef;
+  --muted:#9aa4bf;
+
   --board:#b89b6a;
+  --light: rgba(255,255,255,.12);
+  --dark:  rgba(0,0,0,.10);
+
+  --accent:#32aaca;
+  --danger:#e74c3c;
+  --blue:#2e86de;
+}
+
+html, body { height:100%; }
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  min-height:100vh;
+  min-height:100dvh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:14px;
+  box-sizing:border-box;
+}
+
+.wrap{
+  width:min(980px, 100%);
+  background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:18px;
+  box-shadow:0 20px 80px rgba(0,0,0,.45);
+  overflow:hidden;
+}
+
+.topbar{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  padding:12px 12px;
+  background:rgba(255,255,255,.04);
+  border-bottom:1px solid rgba(255,255,255,.10);
+  flex-wrap:wrap;
+}
+.title{ font-weight:900; letter-spacing:.3px; }
+
+.pill{
+  appearance:none;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.06);
+  color:var(--text);
+  padding:8px 10px;
+  border-radius:12px;
+  font-weight:800;
+  cursor:pointer;
+}
+select.pill{ cursor:pointer; }
+
+.note{ margin-left:auto; color:var(--muted); font-weight:800; }
+
+.main{
+  display:grid;
+  grid-template-columns: 1fr 320px;
+  gap:12px;
+  padding:12px;
+}
+@media (max-width: 860px){
+  .main{ grid-template-columns: 1fr; }
+  .note{ margin-left:0; }
+}
+
+.boardWrap{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:8px 6px 12px;
 }
 
 .board{
@@ -8,8 +89,134 @@
   width: var(--b);
   height: var(--b);
   background: var(--board);
-  display: grid;
+  border-radius: 16px;
+  padding: 10px;
+  display:grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
-  border-radius: 14px;
+  gap:6px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.18);
+  touch-action: manipulation;
+  -webkit-user-select:none;
+  user-select:none;
+}
+
+.sq{
+  border-radius:12px;
+  position:relative;
+  cursor:pointer;
+  background:transparent;
+}
+
+.sq.light{ background: var(--light); }
+.sq.dark{ background: var(--dark); }
+
+.sq.sel{ outline: 3px solid rgba(255,255,255,.25); outline-offset: 1px; }
+.sq.move{ box-shadow: inset 0 0 0 3px rgba(50,170,202,0.60); }
+.sq.capture{ box-shadow: inset 0 0 0 3px rgba(231,76,60,0.60); }
+
+.piece{
+  width: 74%;
+  height: 74%;
+  border-radius: 999px;
+  position:absolute;
+  left:50%; top:50%;
+  transform: translate(-50%,-50%);
+  box-shadow: 0 10px 20px rgba(0,0,0,.18), inset 0 0 0 1px rgba(255,255,255,.12);
+}
+
+.piece.p1{ background: linear-gradient(180deg, #ff6a5a, var(--danger)); }
+.piece.p2{ background: linear-gradient(180deg, #58a6ff, var(--blue)); }
+
+.piece.king{
+  box-shadow: 0 10px 20px rgba(0,0,0,.18), inset 0 0 0 3px rgba(255,255,255,.28);
+}
+.piece.king::after{
+  content: "★";
+  position:absolute;
+  left:50%; top:50%;
+  transform: translate(-50%,-50%);
+  font-size:20px;
+  font-weight:900;
+  color: rgba(255,255,255,.92);
+  text-shadow:0 2px 8px rgba(0,0,0,.45);
+}
+
+.side{
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px;
+  padding: 12px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  min-height: 220px;
+}
+
+.status{ font-weight:900; font-size:16px; }
+.hint{ color:var(--muted); font-weight:700; }
+
+.log{
+  flex:1;
+  overflow:auto;
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px;
+  padding: 10px;
+  font-size: 13px;
+  white-space: pre-line;
+  color: rgba(255,255,255,.85);
+}
+
+
+/* keep controls reachable */
+.wrap{
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow: auto;
+}
+.topbar{
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(10px);
+}
+
+/* end-of-game overlay */
+.endOverlay{
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(0,0,0,.55);
+  z-index: 9999;
+}
+.endOverlay.show{
+  display: flex;
+}
+.endCard{
+  width: min(520px, 100%);
+  background: rgba(15,23,42,.98);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: 0 30px 90px rgba(0,0,0,.6);
+}
+.endTitle{
+  font-weight: 900;
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+.endSub{
+  color: var(--muted);
+  font-weight: 700;
+  margin-bottom: 12px;
+  line-height: 1.35;
+}
+.endActions{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
