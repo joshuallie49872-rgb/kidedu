@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>KidEdu Reading</title>
+  <link rel="stylesheet" href="./reading.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand">
+        <div class="logo">📚</div>
+        <div>
+          <div class="title">Reading Game</div>
+          <div class="sub">Drag letters to build the word</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="btnEN" class="pill">EN</button>
+        <button id="btnLT" class="pill">LT</button>
+
+        <select id="levelSel" class="pill" title="Level">
+          <option value="1">Level 1</option>
+          <option value="2" selected>Level 2</option>
+          <option value="3">Level 3</option>
+          <option value="4">Level 4</option>
+          <option value="5">Level 5</option>
+        </select>
+
+        <button id="btnSpeak" class="pill">🔊 Say</button>
+        <button id="btnNew" class="pill primary">New</button>
+      </div>
+    </header>
+
+    <main class="game">
+      <section class="card big">
+        <div class="prompt">
+          <div id="emoji" class="emoji">🐱</div>
+          <div class="hint">
+            <div class="hintTop" id="hintTop">Build the word:</div>
+            <div class="hintWord" id="hintWord">CAT</div>
+          </div>
+        </div>
+
+        <div class="slots" id="slots" aria-label="Word slots"></div>
+
+        <div class="letters" id="letters" aria-label="Letters"></div>
+
+        <div class="status" id="status"></div>
+
+        <div class="xpRow">
+          <div class="xpBar"><div id="xpFill" class="xpFill"></div></div>
+          <div class="xpText" id="xpText">XP 0</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="./tts.js"></script>
+  <script src="./reading.js"></script>
+</body>
+</html>

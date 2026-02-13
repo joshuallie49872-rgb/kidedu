@@ -164,6 +164,42 @@
   }
   #mancalaModal .mn_frame{ width:100%; height:100%; border:0; background:#000; }
 
+
+  /* Reading modal */
+  #readingModal { position: fixed; inset: 0; display: none; z-index: 2002; }
+  #readingModal.open { display: block; }
+  #readingModal .rd_backdrop { position:absolute; inset:0; background: rgba(0,0,0,.65); }
+  #readingModal .rd_panel {
+    position:absolute; inset: 16px;
+    background:#0f172a;
+    border:1px solid #1f2a44;
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow: 0 20px 80px rgba(0,0,0,.45);
+    display:flex; flex-direction:column;
+  }
+  #readingModal .rd_topbar{
+    display:flex; align-items:center; gap:10px;
+    padding:10px 12px;
+    background:#111a2e;
+    border-bottom:1px solid #1f2a44;
+    font-weight:800;
+  }
+  #readingModal .rd_title{ font-size:16px; }
+  #readingModal .rd_select{
+    margin-left:auto;
+    background:#1f2a44; color:#e6e9ef;
+    border:1px solid #2f3b5f;
+    padding:8px 10px; border-radius:10px; font-weight:800;
+  }
+  #readingModal .rd_close{
+    background:#1f2a44; color:#e6e9ef;
+    border:1px solid #2f3b5f;
+    padding:8px 10px; border-radius:10px; font-weight:900;
+    cursor:pointer;
+  }
+  #readingModal .rd_frame{ width:100%; height:100%; border:0; background:#000; }
+
 </style>
 </head>
 
@@ -173,6 +209,7 @@
   <button id="btnNew">New mix</button>
   <button id="btnCheckers">Checkers</button>
   <button id="btnMancala">Mancala</button>
+  <button id="btnReading">Reading</button>
   <div class="meta" id="meta">Loading…</div>
 </header>
 
@@ -242,6 +279,23 @@
     <iframe id="mnFrame" class="mn_frame" src="" loading="lazy"></iframe>
   </div>
 </div>
+
+
+<div id="readingModal" aria-hidden="true">
+  <div class="rd_backdrop" data-close="1"></div>
+  <div class="rd_panel">
+    <div class="rd_topbar">
+      <div class="rd_title">Reading</div>
+      <select id="rdLang" class="rd_select" title="Language">
+        <option value="en" selected>EN</option>
+        <option value="lt">LT</option>
+      </select>
+      <button id="rdClose" class="rd_close" title="Close">✕</button>
+    </div>
+    <iframe id="rdFrame" class="rd_frame" src="" loading="lazy"></iframe>
+  </div>
+</div>
+
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
@@ -474,6 +528,35 @@ window.addEventListener("keydown", (e)=>{
     closeModal(mnModal, document.getElementById("mnFrame"));
   }
 });
+
+
+// --- Reading (KidEdu) ---
+(function(){
+  const btn = document.getElementById("btnReading");
+  const modal = document.getElementById("readingModal");
+  const closeBtn = document.getElementById("rdClose");
+  const langSel = document.getElementById("rdLang");
+  const frame = document.getElementById("rdFrame");
+
+  function openReading(){
+    const lang = (langSel && langSel.value) ? langSel.value : "en";
+    frame.src = `games/reading/index.html?lang=${encodeURIComponent(lang)}&v=${Date.now()}`;
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden","false");
+  }
+  function closeReading(){
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden","true");
+    frame.src = "";
+  }
+
+  if(btn) btn.addEventListener("click", openReading);
+  if(closeBtn) closeBtn.addEventListener("click", closeReading);
+  if(modal) modal.addEventListener("click", (e)=>{ if(e.target?.dataset?.close) closeReading(); });
+  window.addEventListener("keydown", (e)=>{ if(e.key==="Escape" && modal?.classList.contains("open")) closeReading(); });
+  if(langSel) langSel.addEventListener("change", ()=>{ if(modal?.classList.contains("open")) openReading(); });
+})();
+
 
 init();
 </script>
